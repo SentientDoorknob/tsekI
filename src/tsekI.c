@@ -1,0 +1,109 @@
+#ifndef tsekI_c
+
+#define tsekI_c
+
+#include "tsekI.h"
+#include "linux/tsekL.h"
+
+void tsekI_init(tsekIContext* context, tsekIWindow *window, tsekIWindowInfo *info, bool createGlobalContext, bool console) {
+#ifdef __linux__
+  tsekL_init(context, window, info, createGlobalContext, console);
+#else 
+  printf("Not hello world ):");
+#endif
+}
+
+void tsekI_fill_context(tsekIContext* context, bool setGlobal) {
+#ifdef __linux__
+  tsekL_fill_context(context, setGlobal);
+#endif
+}
+
+void tsekI_destroy_context(tsekIContext *context) {
+#ifdef __linux__
+  tsekL_destroy_context(context);
+#endif
+}
+
+void tsekI_create_dummy_window(tsekIWindow* window) {
+#ifdef __linux__
+  tsekL_create_dummy_window(window);
+#endif
+}
+
+void tsekI_create_window(tsekIWindow* window, tsekIWindowInfo *info) {
+#ifdef __linux__
+  tsekL_create_window(window, info);
+#endif
+}
+
+void tsekI_destroy_window(tsekIWindow *window) {
+#ifdef __linux__
+  tsekL_destroy_window(window);
+#endif
+}
+
+bool tsekI_get_closed_window(tsekIWindow *window) {
+#ifdef __linux__
+  return tsekL_get_closed_window(window);
+#endif
+}
+
+bool tsekI_update_window(tsekIWindow *window) {
+#ifdef __linux__
+  return tsekL_update_window(window);
+#endif
+}
+
+double tsekI_get_time() {
+#ifdef __linux__
+  return tsekL_get_time();
+#endif
+}
+
+double tsekI_get_fixed_time() {
+#ifdef __linux__
+  return tsekL_get_fixed_time();
+#endif
+}
+
+void tsekI_set_time(double time) {
+#ifdef __linux__
+  tsekL_set_time(time);
+#endif
+}
+
+void tsekI_allocate_time(double framerate, double start, double end) {
+#ifdef __linux__
+  tsekL_allocate_time(framerate, start, end);
+#endif
+}
+
+bool tsekI_get_cursor_visible(tsekIWindow* window) {
+#ifdef __linux__
+  return tsekL_get_cursor_visible(window);
+#endif
+}
+
+void tsekI_set_cursor_visible(tsekIWindow* window, bool active) {
+#ifdef __linux__
+  tsekL_set_cursor_visible(window, active);
+#endif
+}
+
+
+void tsekI_get_window_param(tsekIWindow *window, tsekIWindowParam param, void *out) {
+#ifdef __linux__
+  tsekL_get_window_param(window, param, out);
+#endif
+}
+
+void tsekI_set_window_param(tsekIWindow *window, tsekIWindowParam param, void *in) {
+#ifdef __linux__
+  tsekL_set_window_param(window, param, in);
+#endif
+}
+
+
+
+#endif
