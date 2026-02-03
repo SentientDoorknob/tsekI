@@ -11,7 +11,7 @@ void onKeyType(tsekIWindow* window, tsekKeyCode key) {
 }
 
 void onMouseDown(tsekIWindow* window, tsekKeyCode key) {
-  tsekI_set_cursor_visible(window, false);
+  tsekI_set_time(1);
 }
 
 void onMouseUp(tsekIWindow* window, tsekKeyCode key) {

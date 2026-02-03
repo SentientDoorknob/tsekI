@@ -309,6 +309,7 @@ double tsekL_get_fixed_time() {
 }
 
 void tsekL_set_time(double time) {
+  globalContext->timeOffset = Lget_time() - time;
 }
 
 void tsekL_allocate_time(double frametime, double start, double end) {
