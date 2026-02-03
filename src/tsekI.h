@@ -215,7 +215,6 @@ typedef struct {
   uint32_t x, y, width, height;
 } POS;
 
-
 void tsekI_init(tsekIContext*, tsekIWindow*, tsekIWindowInfo*, bool createGlobalContext, bool console);
 
 void tsekI_fill_context(tsekIContext* context, bool setGlobal);
