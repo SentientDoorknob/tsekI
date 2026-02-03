@@ -7,6 +7,7 @@
 #include <linux/input-event-codes.h>
 #include <X11/Xresource.h>
 #include <X11/XKBlib.h>
+#include <time.h>
 
 tsekLContext* globalContext;
 
@@ -247,6 +248,12 @@ Cursor Lget_invisible_cursor(tsekIWindow* window) {
     return cursor;
 }
 
+double Lget_time() {
+  struct timespec ts;
+  clock_gettime(CLOCK_MONOTONIC, &ts);
+  return (double)ts.tv_sec + (double)ts.tv_nsec * 1e-9;
+}
+
 void tsekL_init(tsekIContext *context, tsekIWindow *window, tsekIWindowInfo *info, bool createGlobalContext, bool console) {
 
   Linit_keycode_map();
@@ -288,15 +295,17 @@ void tsekL_init(tsekIContext *context, tsekIWindow *window, tsekIWindowInfo *inf
   XkbSetDetectableAutoRepeat(globalContext->display, True, &supported);
 
   LContext->invisibleCursor = Lget_invisible_cursor(window);
+
+  LContext->fixedTimeOffset = Lget_time();
+  LContext->timeOffset = Lget_time();
 }
 
-
 double tsekL_get_time() {
-  return 0;
+  return Lget_time() - globalContext->timeOffset;
 }
 
 double tsekL_get_fixed_time() {
-  return 0;
+  return Lget_time() - globalContext->fixedTimeOffset;
 }
 
 void tsekL_set_time(double time) {

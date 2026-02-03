@@ -20,8 +20,8 @@ typedef struct {
   Atom WM_DELETE;
   Cursor invisibleCursor;
 
-  double time;
-  double fixedtime;
+  double fixedTimeOffset;
+  double timeOffset;
 } tsekLContext;
 
 void tsekL_init(tsekIContext*, tsekIWindow*, tsekIWindowInfo*, bool createGlobalContext, bool console);

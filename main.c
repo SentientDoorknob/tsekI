@@ -34,6 +34,8 @@ int main() {
 
     tsekI_update_window(window);
 
+    printf("%f %f\n", tsekI_get_fixed_time(), tsekI_get_time());
+
     //printf("Button Map %d %d %d %d %d\n", keymap[TSEK_MBL], keymap[TSEK_MBR], keymap[TSEK_MBM], keymap[TSEK_MB4], keymap[TSEK_MB5]);
   }
 
