@@ -31,10 +31,12 @@ int main() {
   tsekI_set_window_param(window, CALLBACKS, &callbacks);
 
   while (tsekI_get_closed_window(window)) {
+    double start = tsekI_get_time();
 
     tsekI_update_window(window);
 
-    printf("%f %f\n", tsekI_get_fixed_time(), tsekI_get_time());
+    double end = tsekI_get_time();
+    tsekI_allocate_time(1/(double)2, start, end);
 
     //printf("Button Map %d %d %d %d %d\n", keymap[TSEK_MBL], keymap[TSEK_MBR], keymap[TSEK_MBM], keymap[TSEK_MB4], keymap[TSEK_MB5]);
   }

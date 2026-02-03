@@ -1,4 +1,6 @@
 #include "../tsekI.h"
+#include <math.h>
+#include <unistd.h>
 #include <stdio.h>
 #include "tsekL.h"
 #include <X11/Xlib.h>
@@ -313,8 +315,9 @@ void tsekL_set_time(double time) {
 }
 
 void tsekL_allocate_time(double frametime, double start, double end) {
+  double sleepTime = fabs(frametime - (end - start));
+  usleep(sleepTime * 1000000);
 }
-
 
 bool tsekL_get_cursor_visible(tsekIWindow* window) {
   return Lget_window(window)->isCursorVisible;
