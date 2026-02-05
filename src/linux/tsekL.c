@@ -274,8 +274,6 @@ void tsekL_create_window(tsekIWindow* window, tsekIWindowInfo* info) {
 }
 
 void tsekL_destroy_window(tsekIWindow* window) {
-  glFinish();
-  printf("GLFINISHED\n");
   glXMakeCurrent(globalContext->display, None, NULL);
   tsekL_set_cursor_visible(window, true);
   free(window->inner);
@@ -374,6 +372,11 @@ void tsekL_init(tsekIContext *context, tsekIWindow *window, tsekIWindowInfo *inf
 
   LContext->fixedTimeOffset = Lget_time();
   LContext->timeOffset = Lget_time();
+
+  if (!gladLoadGL()) {
+    fprintf(stderr, "Failed to initialize GLAD\n");
+    return;
+  }
 }
 
 double tsekL_get_time() {
@@ -407,6 +410,9 @@ void tsekL_set_cursor_visible(tsekIWindow* window, bool active) {
   Lget_window(window)->isCursorVisible = active;
 }
 
+void tsekL_swap_buffers(tsekIWindow* window) {
+  glXSwapBuffers(globalContext->display, Lget_window(window)->window);
+}
 
 bool tsekL_get_closed_window(tsekIWindow* window) {
   return Lget_window(window)->isOpen;
@@ -470,9 +476,8 @@ void Lproc_mouseup(XButtonEvent event, tsekIWindow* window) {
 
   LWindow->keymap[code] = false;
 }
-bool tsekL_update_window(tsekIWindow* window) {
 
-  XClearWindow(globalContext->display, Lget_window(window)->window);
+bool tsekL_update_window(tsekIWindow* window) {
 
   while (XPending(globalContext->display) > 0) {
 
@@ -509,7 +514,6 @@ bool tsekL_update_window(tsekIWindow* window) {
   }
   return true;
 }
-
 
   void tsekL_get_window_param(tsekIWindow* window, tsekIWindowParam param, void* out) {
     XWindowAttributes attribs;

@@ -7,6 +7,7 @@
 #include <X11/Xlib.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include "../libs/glad.h"
 
 #define MAX_KEYMAP_SIZE 256
 #define TARGET_FRAMERATE 60
@@ -235,6 +236,8 @@ void tsekI_allocate_time(double framerate, double start, double end);
 
 bool tsekI_get_cursor_visible(tsekIWindow*);
 void tsekI_set_cursor_visible(tsekIWindow*, bool);
+
+void tsekI_swap_buffers(tsekIWindow*);
 
 // messager
 

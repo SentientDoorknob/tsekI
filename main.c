@@ -1,5 +1,6 @@
 #include "src/tsekI.h"
 #include <stdio.h>
+#include <time.h>
 
 void onKeyDown(tsekIWindow* window, tsekKeyCode key) {
 }
@@ -11,7 +12,6 @@ void onKeyType(tsekIWindow* window, tsekKeyCode key) {
 }
 
 void onMouseDown(tsekIWindow* window, tsekKeyCode key) {
-  tsekI_set_time(1);
 }
 
 void onMouseUp(tsekIWindow* window, tsekKeyCode key) {
@@ -36,7 +36,12 @@ int main() {
     tsekI_update_window(window);
 
     double end = tsekI_get_time();
-    tsekI_allocate_time(1/(double)2, start, end);
+
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    glClearColor(0.0f, 1.0f, 0.25f, 1.0f);
+
+    tsekI_swap_buffers(window);
 
     //printf("Button Map %d %d %d %d %d\n", keymap[TSEK_MBL], keymap[TSEK_MBR], keymap[TSEK_MBM], keymap[TSEK_MB4], keymap[TSEK_MB5]);
   }

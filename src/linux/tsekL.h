@@ -48,6 +48,8 @@ void tsekL_allocate_time(double framerate, double start, double end);
 bool tsekL_get_cursor_visible(tsekIWindow*);
 void tsekL_set_cursor_visible(tsekIWindow*, bool);
 
+void tsekL_swap_buffers(tsekIWindow*);
+
 // messager
 
 void tsekL_get_window_param(tsekIWindow* window, tsekIWindowParam param, void* out);

@@ -91,6 +91,11 @@ void tsekI_set_cursor_visible(tsekIWindow* window, bool active) {
 #endif
 }
 
+void tsekI_swap_buffers(tsekIWindow* window) {
+#ifdef __linux__
+  tsekL_swap_buffers(window);
+#endif
+}
 
 void tsekI_get_window_param(tsekIWindow *window, tsekIWindowParam param, void *out) {
 #ifdef __linux__
