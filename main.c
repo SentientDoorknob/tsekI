@@ -31,19 +31,13 @@ int main() {
   tsekI_set_window_param(window, CALLBACKS, &callbacks);
 
   while (tsekI_get_closed_window(window)) {
-    double start = tsekI_get_time();
-
     tsekI_update_window(window);
-
-    double end = tsekI_get_time();
 
     glClear(GL_COLOR_BUFFER_BIT);
 
     glClearColor(0.0f, 1.0f, 0.25f, 1.0f);
 
     tsekI_swap_buffers(window);
-
-    //printf("Button Map %d %d %d %d %d\n", keymap[TSEK_MBL], keymap[TSEK_MBR], keymap[TSEK_MBM], keymap[TSEK_MB4], keymap[TSEK_MB5]);
   }
 
   tsekI_destroy_window(window);

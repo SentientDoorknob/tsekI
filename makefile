@@ -3,7 +3,7 @@ CC = gcc
 CFLAGS = -I.
 DEBUGFLAGS = -g -O0
 
-DEPS = src/linux/tsekL.h src/tsekI.h libs/glad.h libs/khrplatform.h
+DEPS = src/linux/tsekL.h src/tsekI.h libs/glad.h libs/khrplatform.h src/tsekG.h
 OBJ = main.o src/tsekI.o src/linux/tsekL.o libs/glad.o
 
 LDFLAGS = -lX11 -lc -lGL
