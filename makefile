@@ -6,7 +6,7 @@ DEBUGFLAGS = -g -O0
 DEPS = src/linux/tsekL.h src/tsekI.h
 OBJ = main.o src/tsekI.o src/linux/tsekL.o
 
-LDFLAGS = -lX11 -lc
+LDFLAGS = -lX11 -lc -lGL
 
 # normal build
 tsekI: $(OBJ)

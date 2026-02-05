@@ -1,4 +1,5 @@
 #include "../tsekI.h"
+#include "../tsekG.h"
 #include <math.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -10,6 +11,8 @@
 #include <X11/Xresource.h>
 #include <X11/XKBlib.h>
 #include <time.h>
+#include <GL/glx.h>
+#include <GL/gl.h>
 
 tsekLContext* globalContext;
 
@@ -179,11 +182,52 @@ void tsekL_destroy_context(tsekIContext* context) {
   free(context->inner);
 }
 
+GLXFBConfig Lget_FBConfig(tsekIWindowInfo* info) {
+    int visual_attribs[] = {
+    GLX_X_RENDERABLE, True,
+    GLX_DRAWABLE_TYPE, GLX_WINDOW_BIT,
+    GLX_RENDER_TYPE, GLX_RGBA_BIT,
+    GLX_X_VISUAL_TYPE, GLX_TRUE_COLOR,
+
+    GLX_RED_SIZE, info->pixelFormat.r_bits,
+    GLX_GREEN_SIZE, info->pixelFormat.g_bits,
+    GLX_BLUE_SIZE, info->pixelFormat.b_bits,
+    GLX_ALPHA_SIZE, info->pixelFormat.a_bits,
+
+    GLX_DEPTH_SIZE, info->pixelFormat.depth_bits,
+    GLX_STENCIL_SIZE, info->pixelFormat.stencil_bits,
+
+    GLX_DOUBLEBUFFER, True,
+
+    GLX_SAMPLE_BUFFERS, 1,
+    GLX_SAMPLES, info->pixelFormat.samples,          // MSAA 4x
+
+    None
+  };
+
+  int fbcount;
+  GLXFBConfig* fbConfigList = glXChooseFBConfig(globalContext->display, DefaultScreen(globalContext->display), visual_attribs, &fbcount);
+  if (fbcount == 0) {
+      printf("Couldn't find any valid FBConfigs\n");
+  }
+  GLXFBConfig fbConfig = fbConfigList[0];
+
+  XFree(fbConfigList);
+
+  return fbConfig;
+}
+
 void tsekL_create_window(tsekIWindow* window, tsekIWindowInfo* info) {
+
+  XVisualInfo *visual = glXGetVisualFromFBConfig(globalContext->display, Lget_FBConfig(info));
 
   printf("Creating Window\n");
 
-  XSetWindowAttributes attribs = {.background_pixel = WhitePixel(globalContext->display, 0)};
+  Colormap map = XCreateColormap(globalContext->display, XDefaultRootWindow(globalContext->display), visual->visual, AllocNone);
+
+  XSetWindowAttributes attribs = {
+    .background_pixel = WhitePixel(globalContext->display, 0),
+    .colormap = map};
 
   Window windowHandle = XCreateWindow(
       globalContext->display,
@@ -191,10 +235,10 @@ void tsekL_create_window(tsekIWindow* window, tsekIWindowInfo* info) {
       info->x, info->y,
       info->width, info->height,
       info->borderWidth,
-      CopyFromParent,
+      visual->depth,
       info->classId,
-      CopyFromParent, 
-      CWBackPixel,
+      visual->visual, 
+      CWBackPixel | CWColormap,
       &attribs);
 
   printf("Window Opened\n");
@@ -223,9 +267,16 @@ void tsekL_create_window(tsekIWindow* window, tsekIWindowInfo* info) {
       KeyReleaseMask |
       ButtonPressMask |
       ButtonReleaseMask);
+
+  glXMakeCurrent(globalContext->display, LWindow->window, globalContext->glContext);
+  
+  XFree(visual);
 }
 
 void tsekL_destroy_window(tsekIWindow* window) {
+  glFinish();
+  printf("GLFINISHED\n");
+  glXMakeCurrent(globalContext->display, None, NULL);
   tsekL_set_cursor_visible(window, true);
   free(window->inner);
   free(window);
@@ -256,13 +307,20 @@ double Lget_time() {
   return (double)ts.tv_sec + (double)ts.tv_nsec * 1e-9;
 }
 
+
 void tsekL_init(tsekIContext *context, tsekIWindow *window, tsekIWindowInfo *info, bool createGlobalContext, bool console) {
 
   Linit_keycode_map();
 
   tsekPixelFormat defaultFormat = {
-    8, 8, 8, 8,
-    8, 24, 4 };
+    .r_bits = 8,
+    .g_bits = 8,
+    .b_bits = 8,
+    .a_bits = 8,
+    .depth_bits = 24,
+    .stencil_bits = 8,
+    .samples = 4,
+  };
 
   tsekIWindowInfo defaultInfo = {
     L"Default Title",
@@ -279,6 +337,20 @@ void tsekL_init(tsekIContext *context, tsekIWindow *window, tsekIWindowInfo *inf
     info = &defaultInfo;
   }
 
+  int context_attribs[] = {
+    GLX_CONTEXT_MAJOR_VERSION_ARB, 4,
+    GLX_CONTEXT_MINOR_VERSION_ARB, 5,
+    GLX_CONTEXT_PROFILE_MASK_ARB,
+    GLX_CONTEXT_CORE_PROFILE_BIT_ARB,
+    None
+  };
+
+  typedef GLXContext (*glXCreateContextAttribsARBProc)(
+    Display*, GLXFBConfig, GLXContext, Bool, const int*);
+
+  glXCreateContextAttribsARBProc glXCreateContextAttribsARB =
+    (void*)glXGetProcAddress((const GLubyte*)"glXCreateContextAttribsARB");
+
   printf("X: %d Y: %d Width: %d Height: %d\n", info->x, info->y, info->width, info->height);
 
   tsekL_fill_context(context, createGlobalContext);
@@ -286,6 +358,8 @@ void tsekL_init(tsekIContext *context, tsekIWindow *window, tsekIWindowInfo *inf
   printf("Context Filled!\n");
 
   tsekLContext* LContext = Lget_context(context);
+
+  LContext->glContext = glXCreateContextAttribsARB(LContext->display, Lget_FBConfig(info), 0, True, context_attribs);
 
   printf("Display Opened\n");
 

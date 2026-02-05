@@ -1,3 +1,4 @@
+#include <GL/glx.h>
 #include <X11/Xutil.h>
 #include "../tsekI.h"
 
@@ -22,6 +23,8 @@ typedef struct {
 
   double fixedTimeOffset;
   double timeOffset;
+
+  GLXContext glContext;
 } tsekLContext;
 
 void tsekL_init(tsekIContext*, tsekIWindow*, tsekIWindowInfo*, bool createGlobalContext, bool console);
