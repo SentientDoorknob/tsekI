@@ -49,11 +49,17 @@ typedef enum {
   FAN,
 } tsekGPrimitive;
 
+typedef struct {
+  const char* vertex;
+  const char* fragment;
+  uint32_t shader;
+} tsekGShader;
+
 void tsekG_surface_init(tsekSurfaceContent*, tsekSurfaceType, tsekSurface*);
 void tsekG_surface_destroy(tsekSurface* surface);
 
-void tsekG_register_resize_callback(tsekSurface* surface);
-void tsekG_bind_surface(tsekSurface* surface);
+void tsekG_surface_register_resize(tsekSurface* surface);
+void tsekG_surface_bind(tsekSurface* surface);
 
 tsekSurface* tsekG_get_bound_surface();
 
@@ -62,7 +68,7 @@ void tsekG_clear();
 
 void tsekG_describe_buffer(tsekGBuffer* buffer, tsekGBufferFormat format);
 void tsekG_fill_buffer(tsekGBuffer* buffer, tsekGBufferData data);
-void tsekG_render_buffer(tsekGBuffer* buffer, tsekGPrimitive primitive);
+void tsekG_render_buffer(tsekGBuffer* buffer, tsekGShader* shader, tsekGPrimitive primitive);
 
-
+void tsekG_compile_shader(tsekGShader* shader);
 
