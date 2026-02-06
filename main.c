@@ -15,7 +15,14 @@ void onMouseDown(tsekIWindow* window, tsekKeyCode key) {
 }
 
 void onMouseUp(tsekIWindow* window, tsekKeyCode key) {
-  tsekI_set_cursor_visible(window, true);
+}
+
+void onResize(tsekIWindow* window, uint32_t width, uint32_t height) {
+  printf("Width: %d Height: %d\n", width, height);
+}
+
+void tsekOnResize(tsekIWindow* window, uint32_t width, uint32_t height) {
+  printf("Width: %d Height: %d\n", width, height);
 }
 
 int main() {
@@ -27,7 +34,8 @@ int main() {
   int *keymap;
   tsekI_get_window_param(window, KEYMAP, &keymap);
 
-  tsekCallbacks callbacks = {.keydown = onKeyDown, .keyup = onKeyUp, .keytype = onKeyType, .mbdown = onMouseDown, .mbup = onMouseUp};
+  tsekCallbacks callbacks = {.keydown = onKeyDown, .keyup = onKeyUp, .keytype = onKeyType, .mbdown = onMouseDown, .mbup = onMouseUp,
+  .tsegsize = tsekOnResize, .size = onResize};
   tsekI_set_window_param(window, CALLBACKS, &callbacks);
 
   while (tsekI_get_closed_window(window)) {

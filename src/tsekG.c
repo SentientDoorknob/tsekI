@@ -15,6 +15,3 @@ void tsekG_surface_destroy(tsekSurface* surface) {
     }
   }
 }
-
-void tsekG_regi
-

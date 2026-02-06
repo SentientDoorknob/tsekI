@@ -266,7 +266,8 @@ void tsekL_create_window(tsekIWindow* window, tsekIWindowInfo* info) {
       KeyPressMask |
       KeyReleaseMask |
       ButtonPressMask |
-      ButtonReleaseMask);
+      ButtonReleaseMask |
+      ResizeRequest);
 
   glXMakeCurrent(globalContext->display, LWindow->window, globalContext->glContext);
   
@@ -477,6 +478,18 @@ void Lproc_mouseup(XButtonEvent event, tsekIWindow* window) {
   LWindow->keymap[code] = false;
 }
 
+void Lproc_resize(XConfigureEvent event, tsekIWindow* window) {
+  tsekLWindow* w = Lget_window(window);
+
+  if (w->callbacks.size) {
+    w->callbacks.size(window, event.width, event.height);
+  }
+
+  if (w->callbacks.tsegsize) {
+    w->callbacks.tsegsize(window, event.width, event.height);
+  }
+}
+
 bool tsekL_update_window(tsekIWindow* window) {
 
   while (XPending(globalContext->display) > 0) {
@@ -510,12 +523,17 @@ bool tsekL_update_window(tsekIWindow* window) {
         Lproc_mouseup(event.xbutton, eWindow);
         break;
       }
+      case ConfigureNotify: {
+        printf("Resize\n");
+        Lproc_resize(event.xconfigure, eWindow);
+        break;
+      }
     }
   }
   return true;
 }
 
-  void tsekL_get_window_param(tsekIWindow* window, tsekIWindowParam param, void* out) {
+void tsekL_get_window_param(tsekIWindow* window, tsekIWindowParam param, void* out) {
     XWindowAttributes attribs;
     Status s = XGetWindowAttributes(globalContext->display, Lget_window(window)->window, &attribs);
 
