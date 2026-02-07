@@ -587,8 +587,8 @@ void tsekL_get_window_param(tsekIWindow* window, tsekIWindowParam param, void* o
       }
       case CALLBACKS: {
         tsekLWindow* w = Lget_window(window);
-        tsekCallbacks* callbacks = (tsekCallbacks*)out;
-        callbacks = &w->callbacks;
+        tsekCallbacks** callbacks = (tsekCallbacks**)out;
+        *callbacks = &w->callbacks;
         break;
       }
       case KEYMAP: {
