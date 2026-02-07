@@ -3,6 +3,8 @@
 #include <GL/gl.h>
 #include <stdio.h>
 
+tsekSurface* activeSurface;
+
 void tsekG_surface_init(tsekSurfaceContent* surfaceContent , tsekSurfaceType type, tsekSurface* surface) {
   surface->content = surfaceContent;
   surface->type = type;
@@ -33,4 +35,8 @@ void tsekG_surface_register_resize(tsekSurface* surface) {
       callbacks->tsegsize(NULL, 0, 0);
     }
   }
+}
+
+void tseKG_surface_bind(tsekSurface* surface) {
+  activeSurface = surface;
 }
