@@ -1,14 +1,21 @@
 #include "tsekI.h"
 #include "tsekG.h"
-#include <GL/gl.h>
 #include <stdio.h>
 
 tsekSurface* activeSurface;
 
-void tsekG_surface_init(tsekSurfaceContent* surfaceContent , tsekSurfaceType type, tsekSurface* surface) {
+void tsekG_surface_bind(tsekSurface* surface) {
+  activeSurface = surface;
+}
+
+void tsekG_surface_init(tsekSurfaceContent* surfaceContent , tsekSurfaceType type, tsekSurface* surface, bool bind) {
   surface->content = surfaceContent;
   surface->type = type;
   tsekG_surface_register_resize(surface);
+
+  if (bind) {
+    tsekG_surface_bind(surface);
+  }
 }
 
 void tsekG_surface_destroy(tsekSurface* surface) {
@@ -37,6 +44,8 @@ void tsekG_surface_register_resize(tsekSurface* surface) {
   }
 }
 
-void tseKG_surface_bind(tsekSurface* surface) {
-  activeSurface = surface;
+void tsekG_clear(Color c) {
+  glClear(GL_COLOR_BUFFER_BIT);
+  glClearColor(c.r, c.g, c.b, c.a);
 }
+

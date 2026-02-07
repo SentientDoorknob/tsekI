@@ -1,6 +1,10 @@
 #include "tsekI.h"
 #include <X11/X.h>
 
+#define COL(r, g, b, a) ((Color){r, g, b, a})
+#define POS2(x, y) ((Pos2){x, y})
+#define POS3(x, y, z) ((Pos3){x, y, z})
+
 typedef enum {
   TSEKI_WINDOW
 } tsekSurfaceType;
@@ -35,6 +39,9 @@ typedef enum {
   U64,
   FLOAT,
   BOOL,
+  COL,
+  POS3,
+  POS2
 } tsekGBufferDataType;
 
 typedef struct {
@@ -55,7 +62,25 @@ typedef struct {
   uint32_t shader;
 } tsekGShader;
 
-void tsekG_surface_init(tsekSurfaceContent*, tsekSurfaceType, tsekSurface*);
+typedef struct {
+  float r;
+  float g;
+  float b;
+  float a;
+} Color;
+
+typedef struct {
+  float x;
+  float y;
+  float z;
+} Pos3;
+
+typedef struct {
+  float x;
+  float y;
+} Pos2;
+
+void tsekG_surface_init(tsekSurfaceContent*, tsekSurfaceType, tsekSurface*, bool);
 void tsekG_surface_destroy(tsekSurface* surface);
 
 void tsekG_surface_register_resize(tsekSurface* surface);
@@ -64,7 +89,7 @@ void tsekG_surface_bind(tsekSurface* surface);
 tsekSurface* tsekG_get_bound_surface();
 
 
-void tsekG_clear();
+void tsekG_clear(Color c);
 
 void tsekG_describe_buffer(tsekGBuffer* buffer, tsekGBufferFormat format);
 void tsekG_fill_buffer(tsekGBuffer* buffer, tsekGBufferData data);
