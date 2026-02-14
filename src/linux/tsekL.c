@@ -1,4 +1,4 @@
-#ifdef __linux__
+#ifdef PLATFORM_LINUX
 
 #include "../tsekI.h"
 #include "../tsekG.h"

@@ -1,4 +1,6 @@
-#ifdef __linux__
+#ifdef PLATFORM_LINUX
+
+#warning "Including Linux-Specific Headers"
 
 #include <X11/Xutil.h>
 #include "../tsekI.h"

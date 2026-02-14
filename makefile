@@ -1,24 +1,43 @@
 CC = gcc
 
 CFLAGS = -I.
-DEBUGFLAGS = -g -O0
+DEBUG_FLAGS = -g -O0
 
-DEPS = src/linux/tsekL.h src/tsekI.h libs/glad.h libs/khrplatform.h src/tsekG.h
-OBJ = main.o src/tsekI.o src/linux/tsekL.o libs/glad.o src/tsekG.o
+LDFLAGS_LINUX = -lX11 -lc -lGL
+LDFLAGS_WINDOWS = 
 
-LDFLAGS = -lX11 -lc -lGL
+LDFLAGS = 
 
-# normal build
-tsekI: $(OBJ)
+DEPS = src/tsekI.h src/tsekG.h libs/glad.h
+OBJS = main.o src/tsekI.o src/tsekG.o libs/glad.o src/linux/tsekL.o
+
+CFLAGS_WINDOWS = -DPLATORM_WINDOWS -UPLATFORM_LINUX
+CFLAGS_LINUX = -DPLATFORM_LINUX -UPLATORM_WINDOWS
+
+ifeq ($(p), windows)
+	CFLAGS += $(CLAGS_WINDOWS)
+	LDFLAGS = $(LDFLAGS_WINDOWS)
+endif
+
+ifeq ($(p), linux)
+	CFLAGS += $(CLAGS_LINUX)
+	LDFLAGS = $(LDFLAGS_LINUX)
+endif
+
+ifeq ($(d), 1)
+	CFLAGS += $(DEBUG_FLAGS)
+endif
+
+
+.PHONY: all tsekI clean
+
+all: tsekI
+
+tsekI: $(OBJS)
 	$(CC) -o $@ $^ $(LDFLAGS)
 
-# debug build (for valgrind)
-debug: CFLAGS += $(DEBUGFLAGS)
-debug: clean tsekI
-
-# object compilation
 %.o: %.c $(DEPS)
 	$(CC) -c $< -o $@ $(CFLAGS)
 
-clean:
-	rm -f $(OBJ) tsekI
+clean: 
+	rm -f $(OBJS) tsekI
