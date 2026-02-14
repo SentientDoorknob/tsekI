@@ -1,5 +1,4 @@
 #include "tsekI.h"
-#include <X11/X.h>
 
 #define COL(r, g, b, a) ((Color){r, g, b, a})
 #define POS2(x, y) ((Pos2){x, y})

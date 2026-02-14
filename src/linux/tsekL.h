@@ -1,3 +1,5 @@
+#ifdef __linux__
+
 #include <X11/Xutil.h>
 #include "../tsekI.h"
 #include <GL/glx.h>
@@ -55,4 +57,4 @@ void tsekL_swap_buffers(tsekIWindow*);
 void tsekL_get_window_param(tsekIWindow* window, tsekIWindowParam param, void* out);
 void tsekL_set_window_param(tsekIWindow* window, tsekIWindowParam param, void* in);
 
-
+#endif

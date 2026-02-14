@@ -1,3 +1,5 @@
+#ifdef __linux__
+
 #include "../tsekI.h"
 #include "../tsekG.h"
 #include <math.h>
@@ -647,3 +649,4 @@ void tsekL_get_window_param(tsekIWindow* window, tsekIWindowParam param, void* o
     }
   }
 
+#endif

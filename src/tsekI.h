@@ -2,9 +2,7 @@
 
 #define TSEKI_H 
 
-#include <X11/X.h>
 #include <stdbool.h>
-#include <X11/Xlib.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include "../libs/glad.h"
