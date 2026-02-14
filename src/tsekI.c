@@ -2,6 +2,7 @@
 
 #define tsekI_c
 
+#include <stdio.h>
 #include "tsekI.h"
 #include "linux/tsekL.h"
 
