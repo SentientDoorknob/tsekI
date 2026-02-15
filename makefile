@@ -8,19 +8,19 @@ LDFLAGS_WINDOWS =
 
 LDFLAGS = 
 
-DEPS = src/tsekI.h src/tsekG.h libs/glad.h
-OBJS = main.o src/tsekI.o src/tsekG.o libs/glad.o src/linux/tsekL.o
+DEPS = src/tsekI.h src/tsekG.h libs/glad.h src/linux/tsekL.h src/windows/tsekW.h
+OBJS = main.o src/tsekI.o src/tsekG.o libs/glad.o src/linux/tsekL.o src/windows/tsekW.o
 
-CFLAGS_WINDOWS = -DPLATORM_WINDOWS -UPLATFORM_LINUX
-CFLAGS_LINUX = -DPLATFORM_LINUX -UPLATORM_WINDOWS
+CFLAGS_WINDOWS = -DPLATFORM_WINDOWS -UPLATFORM_LINUX
+CFLAGS_LINUX = -DPLATFORM_LINUX -UPLATFORM_WINDOWS
 
 ifeq ($(p), windows)
-	CFLAGS += $(CLAGS_WINDOWS)
+	CFLAGS += $(CFLAGS_WINDOWS)
 	LDFLAGS = $(LDFLAGS_WINDOWS)
 endif
 
 ifeq ($(p), linux)
-	CFLAGS += $(CLAGS_LINUX)
+	CFLAGS += $(CFLAGS_LINUX)
 	LDFLAGS = $(LDFLAGS_LINUX)
 endif
 

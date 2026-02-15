@@ -1,4 +1,6 @@
-#ifdef PLATFORM_WINDOWS
+//#ifdef PLATFORM_WINDOWS
+
+#include "../tsekI.h"
 
 void tsekW_init(tsekIContext*, tsekIWindow*, tsekIWindowInfo*, bool createGlobalContext, bool console);
 
@@ -28,4 +30,4 @@ void tsekW_swap_buffers(tsekIWindow*);
 void tsekW_get_window_param(tsekIWindow* window, tsekIWindowParam param, void* out);
 void tsekW_set_window_param(tsekIWindow* window, tsekIWindowParam param, void* in);
 
-#endif
+//#endif
