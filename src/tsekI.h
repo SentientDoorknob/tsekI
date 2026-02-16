@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
+
 #include "../libs/glad.h"
 
 #define MAX_KEYMAP_SIZE 256

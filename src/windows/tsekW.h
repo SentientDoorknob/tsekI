@@ -1,13 +1,16 @@
 #ifdef PLATFORM_WINDOWS
 
 #include "../tsekI.h"
+#include <windows.h>
 
 typedef struct {
-
+  HWND handle;
+  HDC deviceContext;
+  int minMaxDims[4];
 } tsekWWindow;
 
 typedef struct {
-
+  HINSTANCE hInstance;
 } tsekWContext;
 
 void tsekW_init(tsekIContext*, tsekIWindow*, tsekIWindowInfo*, bool createGlobalContext, bool console);

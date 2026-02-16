@@ -3,7 +3,8 @@
 
 #include "tsekW.h"
 #include <stdio.h>
-#include <windows.h>
+
+tsekWContext* globalContext;
 
 tsekWWindow* Wget_window(tsekIWindow* window) {
   return (tsekWWindow*)(window->inner);
@@ -11,6 +12,36 @@ tsekWWindow* Wget_window(tsekIWindow* window) {
 
 tsekWContext* Wget_context(tsekIContext* context) {
   return (tsekWContext*)(context->inner);
+}
+
+LRESULT Wproc_window(HWND hwnd, UINT msg, WPARAM wP, LPARAM lP) {
+  return DefWindowProcW(hwnd, msg, wP, lP);
+}
+
+HINSTANCE Wget_hInstance() {
+  return GetModuleHandle(NULL);
+}
+
+void Wregister_windowclass(tsekIWindowInfo* info) {
+
+  WNDCLASSEXW windowClassInfo = {};
+
+  windowClassInfo.cbSize = sizeof(WNDCLASSEXW);
+  windowClassInfo.style = CS_HREDRAW | CS_VREDRAW;
+  windowClassInfo.cbClsExtra = 0;
+  windowClassInfo.cbWndExtra = 0;
+  windowClassInfo.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+  windowClassInfo.hCursor = LoadCursor(NULL, IDC_ARROW);
+  windowClassInfo.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+  windowClassInfo.lpszMenuName = NULL;
+  windowClassInfo.lpszClassName = info->wndClassName;
+  windowClassInfo.hInstance = globalContext->hInstance;
+  windowClassInfo.lpfnWndProc = Wproc_window;
+
+  if (!RegisterClassExW(&windowClassInfo)) {
+    fprintf(stderr, "Failed to register WNDCLASS\n");
+  }
+
 }
 
 void tsekW_init(tsekIContext* context, tsekIWindow* window, tsekIWindowInfo* info, bool createGlobalContext, bool console) {
@@ -35,7 +66,7 @@ void tsekW_init(tsekIContext* context, tsekIWindow* window, tsekIWindowInfo* inf
     .borderWidth = 0,
     .classId = 0,
     .wndClassName = L"Default Class Name",
-    .style = 0,
+    .style = WS_OVERLAPPEDWINDOW,
     .extendedStyle = 0,
     .pixelFormat = defaultPixelFormat,
     .minMaxDims = {0, 0, 0, 0}
@@ -45,13 +76,18 @@ void tsekW_init(tsekIContext* context, tsekIWindow* window, tsekIWindowInfo* inf
     info = &defaultInfo;
   }
 
-  tsekIWindow dummyWindow;
-  tsekW_create_dummy_window(&dummyWindow);
+  Wregister_windowclass(info);
 
   tsekW_create_window(window, info);
 }
 
 void tsekW_fill_context(tsekIContext* context, bool setGlobal) {
+  tsekWContext* wcontext = Wget_context(context);
+  wcontext->hInstance = Wget_hInstance();
+
+  if (setGlobal) {
+    globalContext = wcontext;
+  }
 }
 
 void tsekW_destroy_context(tsekIContext* context) {
@@ -62,17 +98,49 @@ void tsekW_create_dummy_window(tsekIWindow* window) {
 }
 
 void tsekW_create_window(tsekIWindow* window, tsekIWindowInfo* info) {
+  window->inner = malloc(sizeof(tsekWWindow));
+  tsekWWindow* wwindow = Wget_window(window);
+
+  wwindow->handle = CreateWindowExW(
+      info->extendedStyle,
+      info->wndClassName,
+      info->title,
+      info->style,
+      info->x, info->y,
+      info->width, info->height,
+      NULL, NULL,
+      globalContext->hInstance,
+      window
+      );
+
+  wwindow->deviceContext = GetDC(wwindow->handle);
+
+  memcpy(wwindow->minMaxDims, info->minMaxDims, sizeof(info->minMaxDims));
+
+  if (!wwindow->handle) {
+    DWORD err = GetLastError();
+    fprintf(stderr, "Failed to create window: %lu \n", err);
+  }
+
+  ShowWindow(wwindow->handle, SW_SHOW);
 }
 
 void tsekW_destroy_window(tsekIWindow* window) {
+  DestroyWindow(Wget_window(window)->handle);
+  free(window->inner);
+  free(window);
 }
 
-
 bool tsekW_get_closed_window(tsekIWindow* window) {
-  return true;
+  return (!IsWindow(Wget_window(window)->handle));
 }
 
 bool tsekW_update_window(tsekIWindow* window) {
+  MSG msg;
+  while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE)) {
+    TranslateMessage(&msg);
+    DispatchMessageW(&msg);
+  }
   return true;
 }
 
