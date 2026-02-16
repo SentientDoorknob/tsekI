@@ -9,13 +9,13 @@ LDFLAGS_WINDOWS =
 LDFLAGS = 
 
 DEPS = src/tsekI.h src/tsekG.h src/linux/tsekL.h src/windows/tsekW.h libs/glad.h
-OBJS = main.o src/tsekI.o src/tsekG.o src/linux/tsekL.o src/windows/tsekW.o
+OBJS = main.o src/tsekI.o src/tsekG.o src/linux/tsekL.o src/windows/tsekW.o libs/glad.o
 
-DEPS_LINUX = libs/linux/khrplatformL.h
-DEPS_WINDOWS = libs/windows/khrplatformW.h
+DEPS_LINUX = 
+DEPS_WINDOWS = 
 
-LIBS_LINUX = libs/linux/gladL.o 
-LIBS_WINDOWS = libs/windows/gladW.o
+LIBS_LINUX = 
+LIBS_WINDOWS =
 
 CFLAGS_WINDOWS = -DPLATFORM_WINDOWS -UPLATFORM_LINUX
 CFLAGS_LINUX = -DPLATFORM_LINUX -UPLATFORM_WINDOWS
