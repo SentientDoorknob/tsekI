@@ -1,9 +1,54 @@
 
+#ifdef PLATFORM_WINDOWS
+
 #include "tsekW.h"
 #include <stdio.h>
+#include <windows.h>
+
+tsekWWindow* Wget_window(tsekIWindow* window) {
+  return (tsekWWindow*)(window->inner);
+}
+
+tsekWContext* Wget_context(tsekIContext* context) {
+  return (tsekWContext*)(context->inner);
+}
 
 void tsekW_init(tsekIContext* context, tsekIWindow* window, tsekIWindowInfo* info, bool createGlobalContext, bool console) {
-  printf("Hello TsekW");
+
+  if (console) {
+    AllocConsole();
+    freopen("CONOUT$", "w", stdout);
+    freopen("CONOUT$", "w", stderr);
+    SetConsoleOutputCP(CP_UTF8);
+  }
+
+  tsekW_fill_context(context, createGlobalContext);
+
+  tsekPixelFormat defaultPixelFormat = {
+    .r_bits = 8, .g_bits = 8, .b_bits = 8, .a_bits = 8,
+    .depth_bits = 24, .stencil_bits = 2, .samples = 4 };
+
+  tsekIWindowInfo defaultInfo = {
+    .title = L"Default Title",
+    .width = 500, .height = 500,
+    .x = 100, .y = 100,
+    .borderWidth = 0,
+    .classId = 0,
+    .wndClassName = L"Default Class Name",
+    .style = 0,
+    .extendedStyle = 0,
+    .pixelFormat = defaultPixelFormat,
+    .minMaxDims = {0, 0, 0, 0}
+  };
+
+  if (!info) {
+    info = &defaultInfo;
+  }
+
+  tsekIWindow dummyWindow;
+  tsekW_create_dummy_window(&dummyWindow);
+
+  tsekW_create_window(window, info);
 }
 
 void tsekW_fill_context(tsekIContext* context, bool setGlobal) {
@@ -68,3 +113,4 @@ void tsekW_get_window_param(tsekIWindow* window, tsekIWindowParam param, void* o
 void tsekW_set_window_param(tsekIWindow* window, tsekIWindowParam param, void* in) {
 }
 
+#endif

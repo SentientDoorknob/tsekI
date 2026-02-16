@@ -8,20 +8,31 @@ LDFLAGS_WINDOWS =
 
 LDFLAGS = 
 
-DEPS = src/tsekI.h src/tsekG.h libs/glad.h src/linux/tsekL.h src/windows/tsekW.h
-OBJS = main.o src/tsekI.o src/tsekG.o libs/glad.o src/linux/tsekL.o src/windows/tsekW.o
+DEPS = src/tsekI.h src/tsekG.h src/linux/tsekL.h src/windows/tsekW.h libs/glad.h
+OBJS = main.o src/tsekI.o src/tsekG.o src/linux/tsekL.o src/windows/tsekW.o
+
+DEPS_LINUX = libs/linux/khrplatformL.h
+DEPS_WINDOWS = libs/windows/khrplatformW.h
+
+LIBS_LINUX = libs/linux/gladL.o 
+LIBS_WINDOWS = libs/windows/gladW.o
 
 CFLAGS_WINDOWS = -DPLATFORM_WINDOWS -UPLATFORM_LINUX
 CFLAGS_LINUX = -DPLATFORM_LINUX -UPLATFORM_WINDOWS
 
 ifeq ($(p), windows)
+	CC = x86_64-w64-mingw32-gcc
 	CFLAGS += $(CFLAGS_WINDOWS)
 	LDFLAGS = $(LDFLAGS_WINDOWS)
+	DEPS += $(DEPS_WINDOWS)
+	OBJS += $(LIBS_WINDOWS)
 endif
 
 ifeq ($(p), linux)
 	CFLAGS += $(CFLAGS_LINUX)
 	LDFLAGS = $(LDFLAGS_LINUX)
+	DEPS += $(DEPS_LINUX)
+	OBJS += $(LIBS_LINUX)
 endif
 
 ifeq ($(d), 1)
