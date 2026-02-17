@@ -7,11 +7,11 @@
 #include "linux/tsekL.h"
 #include "windows/tsekW.h"
 
-void tsekI_init(tsekIContext* context, tsekIWindow *window, tsekIWindowInfo *info, bool createGlobalContext, bool console) {
+void tsekI_init(tsekIContext* context, tsekIWindow *window, tsekIWindowInfo *info, wchar_t* defaultTitle, bool createGlobalContext, bool console) {
 #ifdef PLATFORM_LINUX
-  tsekL_init(context, window, info, createGlobalContext, console);
+  tsekL_init(context, window, info, defaultTitle, createGlobalContext, console);
 #elif defined(PLATFORM_WINDOWS)
-  tsekW_init(context, window, info, createGlobalContext, console);
+  tsekW_init(context, window, info, defaultTitle, createGlobalContext, console);
 #endif
 }
 

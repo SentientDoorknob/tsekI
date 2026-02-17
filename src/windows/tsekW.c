@@ -334,7 +334,7 @@ void Wregister_windowclass(tsekIWindowInfo* info) {
 
 }
 
-void tsekW_init(tsekIContext* context, tsekIWindow* window, tsekIWindowInfo* info, bool createGlobalContext, bool console) {
+void tsekW_init(tsekIContext* context, tsekIWindow* window, tsekIWindowInfo* info, wchar_t* defaultTitle, bool createGlobalContext, bool console) {
 
   init_windows_keycode_map();
 
@@ -352,7 +352,7 @@ void tsekW_init(tsekIContext* context, tsekIWindow* window, tsekIWindowInfo* inf
     .depth_bits = 24, .stencil_bits = 2, .samples = 4 };
 
   tsekIWindowInfo defaultInfo = {
-    .title = L"Default Title",
+    .title = defaultTitle,
     .width = 500, .height = 500,
     .x = 100, .y = 100,
     .borderWidth = 0,

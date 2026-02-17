@@ -155,8 +155,6 @@ typedef enum {
   CURSORPOS_WINDOW,
   CURSORPOS_CLIENT,
 
-  TITLE,
-
   KEYMAP,
   CALLBACKS,
 } tsekIWindowParam;
@@ -213,7 +211,7 @@ typedef struct {
   uint32_t x, y, width, height;
 } POS;
 
-void tsekI_init(tsekIContext*, tsekIWindow*, tsekIWindowInfo*, bool createGlobalContext, bool console);
+void tsekI_init(tsekIContext*, tsekIWindow*, tsekIWindowInfo*, wchar_t* defaultTitle, bool createGlobalContext, bool console);
 
 void tsekI_fill_context(tsekIContext* context, bool setGlobal);
 void tsekI_destroy_context(tsekIContext* context);

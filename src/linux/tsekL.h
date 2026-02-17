@@ -32,7 +32,7 @@ typedef struct {
   GLXContext glContext;
 } tsekLContext;
 
-void tsekL_init(tsekIContext*, tsekIWindow*, tsekIWindowInfo*, bool createGlobalContext, bool console);
+void tsekL_init(tsekIContext*, tsekIWindow*, tsekIWindowInfo*, wchar_t* defaultTitle, bool createGlobalContext, bool console);
 
 void tsekL_fill_context(tsekIContext* context, bool setGlobal);
 void tsekL_destroy_context(tsekIContext* context);

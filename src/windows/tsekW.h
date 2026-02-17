@@ -19,7 +19,7 @@ typedef struct {
   HINSTANCE hInstance;
 } tsekWContext;
 
-void tsekW_init(tsekIContext*, tsekIWindow*, tsekIWindowInfo*, bool createGlobalContext, bool console);
+void tsekW_init(tsekIContext*, tsekIWindow*, tsekIWindowInfo*, wchar_t* defaultTitle, bool createGlobalContext, bool console);
 
 void tsekW_fill_context(tsekIContext* context, bool setGlobal);
 void tsekW_destroy_context(tsekIContext* context);

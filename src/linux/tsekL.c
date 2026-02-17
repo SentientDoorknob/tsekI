@@ -309,7 +309,7 @@ double Lget_time() {
 }
 
 
-void tsekL_init(tsekIContext *context, tsekIWindow *window, tsekIWindowInfo *info, bool createGlobalContext, bool console) {
+void tsekL_init(tsekIContext *context, tsekIWindow *window, tsekIWindowInfo *info, wchar_t* defaultTitle, bool createGlobalContext, bool console) {
 
   Linit_keycode_map();
 
@@ -324,7 +324,7 @@ void tsekL_init(tsekIContext *context, tsekIWindow *window, tsekIWindowInfo *inf
   };
 
   tsekIWindowInfo defaultInfo = {
-    L"Default Title",
+    defaultTitle,
     500, 500,
     50, 50,
     0,
@@ -544,10 +544,6 @@ void tsekL_get_window_param(tsekIWindow* window, tsekIWindowParam param, void* o
     }
 
     switch (param) {
-      case TITLE: {
-        fprintf(stderr, "Linux Window has no Title");
-        break;
-      }
       case CLIENT_RECT:
       case CLIENT_DIM:
       case CLIENT_POS:
@@ -608,10 +604,6 @@ void tsekL_get_window_param(tsekIWindow* window, tsekIWindowParam param, void* o
 
   void tsekL_set_window_param(tsekIWindow* window, tsekIWindowParam param, void* in) {
     switch (param) {
-      case TITLE: {
-        fprintf(stderr, "Linux Window has no Title.");
-        break;
-      }
       case WINDOW_RECT:
       case WINDOW_DIM:
       case WINDOW_POS:
