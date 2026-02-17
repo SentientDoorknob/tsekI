@@ -589,7 +589,56 @@ void tsekW_get_window_param(tsekIWindow* window, tsekIWindowParam param, void* o
   }
 }
 
+void Wset_window_rect(tsekIWindow* window, void* in, bool pos, bool dims) {
+    POS* input = (POS*)in;
+    if (pos) SetWindowPos(Wget_window(window)->handle, HWND_TOP, input->x, input->y, input->width, input->height, SWP_NOSIZE);
+    if (dims) SetWindowPos(Wget_window(window)->handle, HWND_TOP, input->x, input->y, input->width, input->height, SWP_NOMOVE);
+}
+
+void Wset_client_rect(tsekIWindow* window, void* in, bool pos, bool dims) {
+    POS* input = (POS*)in;
+    RECT window_rect, client_rect;
+    GetWindowRect(Wget_window(window)->handle, &window_rect); GetClientRect(Wget_window(window)->handle, &client_rect);
+    int frameExtentsH = (window_rect.bottom - window_rect.top) - client_rect.bottom;
+
+    int top = input->y - frameExtentsH;
+    int height = input->height + frameExtentsH;
+
+    if (pos) SetWindowPos(Wget_window(window)->handle, HWND_TOP, input->x, top, input->width, height, SWP_NOSIZE);
+    if (dims) SetWindowPos(Wget_window(window)->handle, HWND_TOP, input->x, top, input->width, height, SWP_NOMOVE);
+}
+
 void tsekW_set_window_param(tsekIWindow* window, tsekIWindowParam param, void* in) {
+  tsekWWindow* wwindow = Wget_window(window);
+
+  switch (param) {
+    case WINDOW_RECT: {
+      Wset_window_rect(window, in, true, true);
+      break;
+    }
+    case WINDOW_POS: {
+      Wset_window_rect(window, in, true, false);
+      break;
+    }
+    case WINDOW_DIM: {
+      Wset_window_rect(window, in, false, true);
+      break;
+    }
+
+    case CLIENT_RECT: {
+      Wset_client_rect(window, in, true, true);
+      break;
+    }
+    case CLIENT_POS: {
+      Wset_client_rect(window, in, true, false);
+      break;
+    }
+    case CLIENT_DIM: {
+      Wset_client_rect(window, in, false, true);
+      break;
+    }
+
+  }
 }
 
 #endif
