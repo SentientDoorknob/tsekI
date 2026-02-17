@@ -241,6 +241,19 @@ void Wproc_mbup(tsekIWindow* window, tsekKeyCode code) {
   wwindow->keymap[code] = false;
 }
 
+void Wproc_resize(tsekIWindow* window, WPARAM wP, LPARAM lP) {
+
+  tsekWWindow* wwindow = Wget_window(window);
+
+  if (wwindow->callbacks.size) {
+    wwindow->callbacks.size(window, LOWORD(lP), HIWORD(lP));
+  }
+
+  if (wwindow->callbacks.tsegsize) {
+    wwindow->callbacks.tsegsize(window, LOWORD(lP), HIWORD(lP));
+  }
+}
+
 LRESULT Wproc_window(HWND hwnd, UINT msg, WPARAM wP, LPARAM lP) {
 
   tsekIWindow* window;
@@ -253,10 +266,9 @@ LRESULT Wproc_window(HWND hwnd, UINT msg, WPARAM wP, LPARAM lP) {
 
   switch (msg) {
     case (WM_SIZE): {
-      printf("Resize!\n");
+      Wproc_resize(window, wP, lP);
       break;
     } case (WM_MOVE): {
-      printf("Moved!\n");
       break;
     } case (WM_KEYDOWN): {
       Wproc_keydown(window, wP, lP);
