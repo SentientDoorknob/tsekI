@@ -39,7 +39,6 @@ void tsekG_surface_register_resize(tsekSurface* surface) {
       tsekI_get_window_param(surface->content->tsekIWindow, CALLBACKS, &callbacks);
       callbacks->tsegsize = GtsekI_callback;
       printf("Set Resize Callback\n");
-      callbacks->tsegsize(NULL, 0, 0);
     }
   }
 }

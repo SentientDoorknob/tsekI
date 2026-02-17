@@ -638,6 +638,15 @@ void tsekW_set_window_param(tsekIWindow* window, tsekIWindowParam param, void* i
       break;
     }
 
+    case CALLBACKS: {
+      tsekCallbacks* callbacks = (tsekCallbacks*)in;
+      Wget_window(window)->callbacks = *callbacks;
+      break;
+    }
+    case KEYMAP: {
+      fprintf(stderr, "Keymap is read-only.");
+      break;
+    }
   }
 }
 
