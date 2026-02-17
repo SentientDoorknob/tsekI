@@ -5,7 +5,6 @@
 #include <X11/Xutil.h>
 #include "../tsekI.h"
 #include <GL/glx.h>
-#include "../../libs/linux/gladL.h"
 
 #define MAX_LINUX_KEYCODE 255
 
