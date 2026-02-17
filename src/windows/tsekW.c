@@ -219,6 +219,28 @@ void Wproc_keyup(tsekIWindow* window, WPARAM wP, LPARAM lP) {
   wwindow->keymap[key] = false;
 }
 
+void Wproc_mbdown(tsekIWindow* window, tsekKeyCode code) {
+
+  tsekWWindow* wwindow = Wget_window(window);
+
+  if (wwindow->callbacks.mbdown) {
+    wwindow->callbacks.mbdown(window, code);
+  }
+
+  wwindow->keymap[code] = true;
+}
+
+void Wproc_mbup(tsekIWindow* window, tsekKeyCode code) {
+
+  tsekWWindow* wwindow = Wget_window(window);
+
+  if (wwindow->callbacks.mbup) {
+    wwindow->callbacks.mbup(window, code);
+  }
+
+  wwindow->keymap[code] = false;
+}
+
 LRESULT Wproc_window(HWND hwnd, UINT msg, WPARAM wP, LPARAM lP) {
 
   tsekIWindow* window;
@@ -241,6 +263,30 @@ LRESULT Wproc_window(HWND hwnd, UINT msg, WPARAM wP, LPARAM lP) {
       break;
     } case (WM_KEYUP): {
       Wproc_keyup(window, wP, lP);
+      break;
+    } 
+
+    case (WM_LBUTTONDOWN): {
+      Wproc_mbdown(window, TSEK_MBL);
+      break;
+    } case (WM_LBUTTONUP): {
+      Wproc_mbup(window, TSEK_MBL);
+      break;
+    }
+
+    case (WM_RBUTTONDOWN): {
+      Wproc_mbdown(window, TSEK_MBR);
+      break;
+    } case (WM_RBUTTONUP): {
+      Wproc_mbup(window, TSEK_MBR);
+      break;
+    }
+
+    case (WM_MBUTTONDOWN): {
+      Wproc_mbdown(window, TSEK_MBM);
+      break;
+    } case (WM_MBUTTONUP): {
+      Wproc_mbup(window, TSEK_MBM);
       break;
     }
   }
