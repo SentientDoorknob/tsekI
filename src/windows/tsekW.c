@@ -14,9 +14,43 @@ tsekWContext* Wget_context(tsekIContext* context) {
   return (tsekWContext*)(context->inner);
 }
 
+tsekIWindow* Wproc_get_window(HWND hwnd, UINT msg, WPARAM wp, LPARAM lP) {
+  LONG_PTR ptr = GetWindowLongPtr(hwnd, GWLP_USERDATA);
+  tsekIWindow* window = (tsekIWindow*)ptr;
+  return window;
+}
+
+tsekIWindow* Wproc_create(HWND hwnd, UINT msg, WPARAM wP, LPARAM lP) {
+  CREATESTRUCT* pCreate = (CREATESTRUCT*)(lP);
+  tsekIWindow* window = (tsekIWindow*)(pCreate->lpCreateParams);
+  SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)window);
+  return window;
+}
+
 LRESULT Wproc_window(HWND hwnd, UINT msg, WPARAM wP, LPARAM lP) {
+
+  tsekIWindow* window;
+
+  if (msg == WM_CREATE) { 
+    window = Wproc_create(hwnd, msg, wP, lP);
+  } else {
+    window = Wproc_get_window(hwnd, msg, wP, lP);
+  }
+
+  switch (msg) {
+    case (WM_SIZE): {
+      printf("Resize!\n");
+      break;
+    } case (WM_MOVE): {
+      printf("Moved!\n");
+      break;
+    }
+  }
+
   return DefWindowProcW(hwnd, msg, wP, lP);
 }
+
+
 
 HINSTANCE Wget_hInstance() {
   return GetModuleHandle(NULL);
@@ -123,6 +157,8 @@ void tsekW_create_window(tsekIWindow* window, tsekIWindowInfo* info) {
   }
 
   ShowWindow(wwindow->handle, SW_SHOW);
+
+  wwindow->isCursorVisible = true;
 }
 
 void tsekW_destroy_window(tsekIWindow* window) {
@@ -176,6 +212,7 @@ void tsekW_swap_buffers(tsekIWindow* window) {
 // messager
 
 void tsekW_get_window_param(tsekIWindow* window, tsekIWindowParam param, void* out) {
+
 }
 
 void tsekW_set_window_param(tsekIWindow* window, tsekIWindowParam param, void* in) {

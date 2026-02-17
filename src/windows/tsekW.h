@@ -3,10 +3,16 @@
 #include "../tsekI.h"
 #include <windows.h>
 
+#define WINDOWS_MAX_KEYMAP_SIZE 255
+
 typedef struct {
   HWND handle;
   HDC deviceContext;
   int minMaxDims[4];
+
+  bool keymap[255];
+  tsekCallbacks callbacks;
+  bool isCursorVisible;
 } tsekWWindow;
 
 typedef struct {
