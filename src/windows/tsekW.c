@@ -647,6 +647,26 @@ void tsekW_set_window_param(tsekIWindow* window, tsekIWindowParam param, void* i
       fprintf(stderr, "Keymap is read-only.");
       break;
     }
+
+    case CURSORPOS_DESKTOP: {
+      int* pos = (int*)in;
+      SetCursorPos(pos[0], pos[1]);
+      break;
+    }
+    case CURSORPOS_WINDOW: {
+      int* pos = (int*) in;
+      POS relativeTo;
+      Wget_window_rect(window, &relativeTo, true, false);
+      SetCursorPos(pos[0] + relativeTo.x, pos[1] + relativeTo.y);
+      break;
+    }
+    case CURSORPOS_CLIENT: {
+      int* pos = (int*) in;
+      POS relativeTo;
+      Wget_client_rect(window, &relativeTo, true, false);
+      SetCursorPos(pos[0] + relativeTo.x, pos[1] + relativeTo.y);
+      break;
+    }
   }
 }
 
