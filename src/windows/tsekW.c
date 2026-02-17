@@ -519,6 +519,14 @@ void Wget_client_rect(tsekIWindow* window, void* out, bool pos, bool dims) {
   }
 }
 
+void Wget_mouse_pos(tsekIWindow* window, void* out, POS relativeTo) {
+  POINT mousepos;
+  GetCursorPos(&mousepos);
+
+  ((int*)out)[0] = mousepos.x - relativeTo.x;
+  ((int*)out)[1] = mousepos.y - relativeTo.y;
+}
+
 
 void tsekW_get_window_param(tsekIWindow* window, tsekIWindowParam param, void* out) {
 
@@ -559,6 +567,23 @@ void tsekW_get_window_param(tsekIWindow* window, tsekIWindowParam param, void* o
     }
     case CLIENT_DIM: {
       Wget_client_rect(window, out, false, true);
+      break;
+    }
+
+    case CURSORPOS_DESKTOP: {
+      Wget_mouse_pos(window, out, (POS){0, 0, 0, 0});
+      break;
+    }
+    case CURSORPOS_WINDOW: {
+      POS windowpos;
+      Wget_window_rect(window, &windowpos, true, false);
+      Wget_mouse_pos(window, out, windowpos);
+      break;
+    }
+    case CURSORPOS_CLIENT: {
+      POS clientpos;
+      Wget_client_rect(window, &clientpos, true, false);
+      Wget_mouse_pos(window, out, clientpos);
       break;
     }
   }
