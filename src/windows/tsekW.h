@@ -10,7 +10,7 @@ typedef struct {
   HDC deviceContext;
   int minMaxDims[4];
 
-  bool keymap[255];
+  int keymap[255];
   tsekCallbacks callbacks;
   bool isCursorVisible;
 } tsekWWindow;

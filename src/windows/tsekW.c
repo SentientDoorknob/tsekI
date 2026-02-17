@@ -5,6 +5,135 @@
 #include <stdio.h>
 
 tsekWContext* globalContext;
+int keycode_map[256];
+
+void init_windows_keycode_map() {
+  for (int i = 0; i <= 255; i++) {
+    keycode_map[i] = TSEK_NONE;
+  }
+
+  keycode_map['A'] = TSEK_A;
+  keycode_map['B'] = TSEK_B;
+  keycode_map['C'] = TSEK_C;
+  keycode_map['D'] = TSEK_D;
+  keycode_map['E'] = TSEK_E;
+  keycode_map['F'] = TSEK_F;
+  keycode_map['G'] = TSEK_G;
+  keycode_map['H'] = TSEK_H;
+  keycode_map['I'] = TSEK_I;
+  keycode_map['J'] = TSEK_J;
+  keycode_map['K'] = TSEK_K;
+  keycode_map['L'] = TSEK_L;
+  keycode_map['M'] = TSEK_M;
+  keycode_map['N'] = TSEK_N;
+  keycode_map['O'] = TSEK_O;
+  keycode_map['P'] = TSEK_P;
+  keycode_map['Q'] = TSEK_Q;
+  keycode_map['R'] = TSEK_R;
+  keycode_map['S'] = TSEK_S;
+  keycode_map['T'] = TSEK_T;
+  keycode_map['U'] = TSEK_U;
+  keycode_map['V'] = TSEK_V;
+  keycode_map['W'] = TSEK_W;
+  keycode_map['X'] = TSEK_X;
+  keycode_map['Y'] = TSEK_Y;
+  keycode_map['Z'] = TSEK_Z; 
+
+  // Numbers (top row)
+  keycode_map['0'] = TSEK_0;
+  keycode_map['1'] = TSEK_1;
+  keycode_map['2'] = TSEK_2;
+  keycode_map['3'] = TSEK_3;
+  keycode_map['4'] = TSEK_4;
+  keycode_map['5'] = TSEK_5;
+  keycode_map['6'] = TSEK_6;
+  keycode_map['7'] = TSEK_7;
+  keycode_map['8'] = TSEK_8;
+  keycode_map['9'] = TSEK_9;
+
+  // Symbols (OEM keys – layout dependent!)
+  keycode_map[VK_OEM_MINUS]      = TSEK_MINUS;
+  keycode_map[VK_OEM_PLUS]       = TSEK_EQUAL;
+  keycode_map[VK_OEM_4]          = TSEK_LEFTBRACKET;   // [
+  keycode_map[VK_OEM_6]          = TSEK_RIGHTBRACKET;  // ]
+  keycode_map[VK_OEM_5]          = TSEK_BACKSLASH;     // \
+  keycode_map[VK_OEM_1]          = TSEK_SEMICOLON;     // ;
+  keycode_map[VK_OEM_7]          = TSEK_APOSTROPHE;    // '
+  keycode_map[VK_OEM_3]          = TSEK_GRAVE;         // `
+  keycode_map[VK_OEM_COMMA]      = TSEK_COMMA;         // ,
+  keycode_map[VK_OEM_PERIOD]     = TSEK_PERIOD;        // .
+  keycode_map[VK_OEM_2]          = TSEK_SLASH;         // /
+
+  // Control keys
+  keycode_map[VK_RETURN]   = TSEK_ENTER;
+  keycode_map[VK_ESCAPE]   = TSEK_ESCAPE;
+  keycode_map[VK_BACK]     = TSEK_BACKSPACE;
+  keycode_map[VK_TAB]      = TSEK_TAB;
+  keycode_map[VK_SPACE]    = TSEK_SPACE;
+  keycode_map[VK_CAPITAL]  = TSEK_CAPSLOCK;
+
+  // Function keys
+  keycode_map[VK_F1]  = TSEK_F1;
+  keycode_map[VK_F2]  = TSEK_F2;
+  keycode_map[VK_F3]  = TSEK_F3;
+  keycode_map[VK_F4]  = TSEK_F4;
+  keycode_map[VK_F5]  = TSEK_F5;
+  keycode_map[VK_F6]  = TSEK_F6;
+  keycode_map[VK_F7]  = TSEK_F7;
+  keycode_map[VK_F8]  = TSEK_F8;
+  keycode_map[VK_F9]  = TSEK_F9;
+  keycode_map[VK_F10] = TSEK_F10;
+  keycode_map[VK_F11] = TSEK_F11;
+  keycode_map[VK_F12] = TSEK_F12;
+
+  // Arrow keys
+  keycode_map[VK_LEFT]  = TSEK_LEFT;
+  keycode_map[VK_UP]    = TSEK_UP;
+  keycode_map[VK_RIGHT] = TSEK_RIGHT;
+  keycode_map[VK_DOWN]  = TSEK_DOWN;
+
+  // Modifier keys
+  keycode_map[VK_LSHIFT]   = TSEK_LEFTSHIFT;
+  keycode_map[VK_RSHIFT]   = TSEK_RIGHTSHIFT;
+  keycode_map[VK_LCONTROL] = TSEK_LEFTCTRL;
+  keycode_map[VK_RCONTROL] = TSEK_RIGHTCTRL;
+  keycode_map[VK_LMENU]    = TSEK_LEFTALT;
+  keycode_map[VK_RMENU]    = TSEK_RIGHTALT;
+  keycode_map[VK_LWIN]     = TSEK_LEFTMETA;
+  keycode_map[VK_RWIN]     = TSEK_RIGHTMETA;
+
+  // Numpad
+  keycode_map[VK_NUMPAD0] = TSEK_NUMPAD0;
+  keycode_map[VK_NUMPAD1] = TSEK_NUMPAD1;
+  keycode_map[VK_NUMPAD2] = TSEK_NUMPAD2;
+  keycode_map[VK_NUMPAD3] = TSEK_NUMPAD3;
+  keycode_map[VK_NUMPAD4] = TSEK_NUMPAD4;
+  keycode_map[VK_NUMPAD5] = TSEK_NUMPAD5;
+  keycode_map[VK_NUMPAD6] = TSEK_NUMPAD6;
+  keycode_map[VK_NUMPAD7] = TSEK_NUMPAD7;
+  keycode_map[VK_NUMPAD8] = TSEK_NUMPAD8;
+  keycode_map[VK_NUMPAD9] = TSEK_NUMPAD9;
+
+  keycode_map[VK_DECIMAL]  = TSEK_NUMPADDECIMAL;
+  keycode_map[VK_RETURN]   = TSEK_NUMPADENTER;  // Distinguish via extended flag if needed
+  keycode_map[VK_ADD]      = TSEK_NUMPADADD;
+  keycode_map[VK_SUBTRACT] = TSEK_NUMPADSUBTRACT;
+  keycode_map[VK_MULTIPLY] = TSEK_NUMPADMULTIPLY;
+  keycode_map[VK_DIVIDE]   = TSEK_NUMPADDIVIDE;
+
+  // Editing/navigation
+  keycode_map[VK_INSERT]   = TSEK_INSERT;
+  keycode_map[VK_DELETE]   = TSEK_DELETE;
+  keycode_map[VK_HOME]     = TSEK_HOME;
+  keycode_map[VK_END]      = TSEK_END;
+  keycode_map[VK_PRIOR]    = TSEK_PAGEUP;
+  keycode_map[VK_NEXT]     = TSEK_PAGEDOWN;
+
+  // Other
+  keycode_map[VK_SNAPSHOT] = TSEK_PRINTSCREEN;
+  keycode_map[VK_SCROLL]   = TSEK_SCROLLLOCK;
+  keycode_map[VK_PAUSE]    = TSEK_PAUSE;
+}
 
 tsekWWindow* Wget_window(tsekIWindow* window) {
   return (tsekWWindow*)(window->inner);
@@ -27,6 +156,69 @@ tsekIWindow* Wproc_create(HWND hwnd, UINT msg, WPARAM wP, LPARAM lP) {
   return window;
 }
 
+tsekKeyCode Wget_keycode(WPARAM wP, LPARAM lP) {
+  switch (wP)
+  {
+    case VK_SHIFT:
+      {
+        UINT scancode = (lP >> 16) & 0xFF;
+        UINT vk = MapVirtualKey(scancode, MAPVK_VSC_TO_VK_EX);
+
+        if (vk == VK_LSHIFT)
+          return TSEK_LEFTSHIFT;
+        else
+          return TSEK_RIGHTSHIFT;
+      }
+
+    case VK_CONTROL:
+      {
+        bool extended = (lP & (1 << 24)) != 0;
+        return extended ? TSEK_RIGHTCTRL : TSEK_LEFTCTRL;
+      }
+
+    case VK_MENU:
+      {
+        bool extended = (lP & (1 << 24)) != 0;
+        return extended ? TSEK_RIGHTALT : TSEK_LEFTALT;
+      }
+
+    case VK_LWIN: return TSEK_LEFTMETA;
+    case VK_RWIN: return TSEK_RIGHTMETA;
+  }
+
+  return keycode_map[wP];
+}
+
+void Wproc_keydown(tsekIWindow* window, WPARAM wP, LPARAM lP) {
+  
+  tsekWWindow* wwindow = Wget_window(window);
+
+  tsekKeyCode key = Wget_keycode(wP, lP);
+
+  if (wwindow->callbacks.keydown && wwindow->keymap[key] == false) {
+    wwindow->callbacks.keydown(window, key);
+  }
+
+  if (wwindow->callbacks.keytype) {
+    wwindow->callbacks.keytype(window, key);
+  }
+
+  wwindow->keymap[key] = true;
+}
+
+void Wproc_keyup(tsekIWindow* window, WPARAM wP, LPARAM lP) {
+
+  tsekWWindow* wwindow = Wget_window(window);
+
+  tsekKeyCode key = Wget_keycode(wP, lP);
+
+  if (wwindow->callbacks.keyup) {
+    wwindow->callbacks.keyup(window, key);
+  }
+
+  wwindow->keymap[key] = false;
+}
+
 LRESULT Wproc_window(HWND hwnd, UINT msg, WPARAM wP, LPARAM lP) {
 
   tsekIWindow* window;
@@ -43,6 +235,12 @@ LRESULT Wproc_window(HWND hwnd, UINT msg, WPARAM wP, LPARAM lP) {
       break;
     } case (WM_MOVE): {
       printf("Moved!\n");
+      break;
+    } case (WM_KEYDOWN): {
+      Wproc_keydown(window, wP, lP);
+      break;
+    } case (WM_KEYUP): {
+      Wproc_keyup(window, wP, lP);
       break;
     }
   }
@@ -79,6 +277,8 @@ void Wregister_windowclass(tsekIWindowInfo* info) {
 }
 
 void tsekW_init(tsekIContext* context, tsekIWindow* window, tsekIWindowInfo* info, bool createGlobalContext, bool console) {
+
+  init_windows_keycode_map();
 
   if (console) {
     AllocConsole();
@@ -213,6 +413,20 @@ void tsekW_swap_buffers(tsekIWindow* window) {
 
 void tsekW_get_window_param(tsekIWindow* window, tsekIWindowParam param, void* out) {
 
+  tsekWWindow* wwindow = Wget_window(window);
+
+  switch (param) {
+    case KEYMAP: {
+      int** p = (int**)out;
+      *p = wwindow->keymap;
+      break;
+    }
+    case CALLBACKS: {
+      tsekCallbacks** p = (tsekCallbacks**)out;
+      *p = &wwindow->callbacks;
+      break;
+    }
+  }
 }
 
 void tsekW_set_window_param(tsekIWindow* window, tsekIWindowParam param, void* in) {

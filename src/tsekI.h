@@ -5,7 +5,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
-
 #include "../libs/glad.h"
 
 #define MAX_KEYMAP_SIZE 256
@@ -204,7 +203,6 @@ typedef struct {
   void (*keyup)(tsekIWindow*, tsekKeyCode);
   void (*mbdown)(tsekIWindow*, tsekKeyCode);
   void (*mbup)(tsekIWindow*, tsekKeyCode);
-  void (*mbdclick)(tsekIWindow*, tsekKeyCode);
   void (*kstate)(tsekIWindow*, tsekKeyCode, bool);
 
   void (*tsegsize)(tsekIWindow*, uint32_t width, uint32_t height);
