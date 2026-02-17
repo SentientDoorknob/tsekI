@@ -254,7 +254,7 @@ void Wproc_resize(tsekIWindow* window, WPARAM wP, LPARAM lP) {
   }
 }
 
-LRESULT Wproc_window(HWND hwnd, UINT msg, WPARAM wP, LPARAM lP) {
+LRESULT CALLBACK Wproc_window(HWND hwnd, UINT msg, WPARAM wP, LPARAM lP) {
 
   tsekIWindow* window;
 
@@ -370,10 +370,13 @@ void tsekW_init(tsekIContext* context, tsekIWindow* window, tsekIWindowInfo* inf
 
   Wregister_windowclass(info);
 
+  printf("Window Class Registered\n");
+
   tsekW_create_window(window, info);
 }
 
 void tsekW_fill_context(tsekIContext* context, bool setGlobal) {
+
   tsekWContext* wcontext = Wget_context(context);
   wcontext->hInstance = Wget_hInstance();
 
@@ -390,7 +393,7 @@ void tsekW_create_dummy_window(tsekIWindow* window) {
 }
 
 void tsekW_create_window(tsekIWindow* window, tsekIWindowInfo* info) {
-  window->inner = malloc(sizeof(tsekWWindow));
+  window->inner = calloc(1, sizeof(tsekWWindow));
   tsekWWindow* wwindow = Wget_window(window);
 
   wwindow->handle = CreateWindowExW(
@@ -469,6 +472,54 @@ void tsekW_swap_buffers(tsekIWindow* window) {
 
 // messager
 
+void Wget_window_rect(tsekIWindow* window, void* out, bool pos, bool dims) {
+  RECT rect;
+  GetWindowRect(Wget_window(window)->handle, &rect);
+
+  POS result = {
+    .x = rect.left,
+    .y = rect.top,
+    .width = rect.right - rect.left,
+    .height = rect.bottom - rect.top
+  };
+
+  if (pos) {
+    ((POS*)out)->x = result.x;
+    ((POS*)out)->y = result.y;
+  }
+  if (dims) {
+    ((POS*)out)->width = result.width;
+    ((POS*)out)->height = result.height;
+  }
+}
+
+
+void Wget_client_rect(tsekIWindow* window, void* out, bool pos, bool dims) {
+  HWND windowHandle = Wget_window(window)->handle;
+  RECT client_rect, window_rect;
+  GetClientRect(windowHandle, &client_rect);
+  GetWindowRect(windowHandle, &window_rect);
+
+  int FrameExtentsH = (window_rect.bottom - window_rect.top) - client_rect.bottom;
+
+  POS result = {
+    .x = window_rect.left,
+    .y = window_rect.top + FrameExtentsH,
+    .width = window_rect.right - window_rect.left,
+    .height = window_rect.bottom - (window_rect.top + FrameExtentsH)
+  };
+
+  if (pos) {
+    ((POS*)out)->x = result.x;
+    ((POS*)out)->y = result.y;
+  }
+  if (dims) {
+    ((POS*)out)->width = result.width;
+    ((POS*)out)->height = result.height;
+  }
+}
+
+
 void tsekW_get_window_param(tsekIWindow* window, tsekIWindowParam param, void* out) {
 
   tsekWWindow* wwindow = Wget_window(window);
@@ -482,6 +533,32 @@ void tsekW_get_window_param(tsekIWindow* window, tsekIWindowParam param, void* o
     case CALLBACKS: {
       tsekCallbacks** p = (tsekCallbacks**)out;
       *p = &wwindow->callbacks;
+      break;
+    }
+
+    case WINDOW_RECT: {
+      Wget_window_rect(window, out, true, true);
+      break;
+    }
+    case WINDOW_POS: {
+      Wget_window_rect(window, out, true, false);
+      break;
+    }
+    case WINDOW_DIM: {
+      Wget_window_rect(window, out, false, true);
+      break;
+    }
+
+    case CLIENT_RECT: {
+      Wget_client_rect(window, out, true, true);
+      break;
+    }
+    case CLIENT_POS: {
+      Wget_client_rect(window, out, true, false);
+      break;
+    }
+    case CLIENT_DIM: {
+      Wget_client_rect(window, out, false, true);
       break;
     }
   }
