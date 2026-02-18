@@ -18,6 +18,10 @@ typedef struct {
 
 typedef struct {
   HINSTANCE hInstance;
+
+  LARGE_INTEGER time;
+  LARGE_INTEGER fixed_time;
+  LARGE_INTEGER freq;
 } tsekWContext;
 
 void tsekW_init(tsekIContext*, tsekIWindow*, tsekIWindowInfo*, wchar_t* defaultTitle, bool createGlobalContext, bool console);

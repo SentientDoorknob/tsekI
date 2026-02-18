@@ -518,9 +518,14 @@ void tsekW_init(tsekIContext* context, tsekIWindow* window, tsekIWindowInfo* inf
 }
 
 void tsekW_fill_context(tsekIContext* context, bool setGlobal) {
+  context->inner = malloc(sizeof(tsekWContext));
 
   tsekWContext* wcontext = Wget_context(context);
   wcontext->hInstance = Wget_hInstance();
+
+  QueryPerformanceCounter(&wcontext->time);
+  QueryPerformanceCounter(&wcontext->fixed_time);
+  QueryPerformanceFrequency(&wcontext->freq);
 
   if (setGlobal) {
     globalContext = wcontext;
@@ -528,7 +533,7 @@ void tsekW_fill_context(tsekIContext* context, bool setGlobal) {
 }
 
 void tsekW_destroy_context(tsekIContext* context) {
-
+  free(context->inner);
 }
 
 void tsekW_create_dummy_window(tsekIWindow* window) {
@@ -598,7 +603,6 @@ void tsekW_create_window(tsekIWindow* window, tsekIWindowInfo* info) {
 void tsekW_destroy_window(tsekIWindow* window) {
   DestroyWindow(Wget_window(window)->handle);
   free(window->inner);
-  free(window);
 }
 
 bool tsekW_get_closed_window(tsekIWindow* window) {
@@ -616,7 +620,10 @@ bool tsekW_update_window(tsekIWindow* window) {
 
 
 double tsekW_get_time() {
-  return 0;
+  LARGE_INTEGER end;
+  QueryPerformanceCounter(&end);
+
+  return (double)(end.QuadPart - globalContext->time.QuadPart) / globalContext->freq.QuadPart;
 }
 
 double tsekW_get_fixed_time() {
