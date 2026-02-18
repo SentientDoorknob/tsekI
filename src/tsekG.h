@@ -61,24 +61,6 @@ typedef struct {
   uint32_t shader;
 } tsekGShader;
 
-typedef struct {
-  float r;
-  float g;
-  float b;
-  float a;
-} Color;
-
-typedef struct {
-  float x;
-  float y;
-  float z;
-} Pos3;
-
-typedef struct {
-  float x;
-  float y;
-} Pos2;
-
 void tsekG_surface_init(tsekSurfaceContent*, tsekSurfaceType, tsekSurface*, bool);
 void tsekG_surface_destroy(tsekSurface* surface);
 
@@ -88,7 +70,7 @@ void tsekG_surface_bind(tsekSurface* surface);
 tsekSurface* tsekG_get_bound_surface();
 
 
-void tsekG_clear(Color c);
+void tsekG_clear(float r, float g, float b, float a);
 
 void tsekG_describe_buffer(tsekGBuffer* buffer, tsekGBufferFormat format);
 void tsekG_fill_buffer(tsekGBuffer* buffer, tsekGBufferData data);

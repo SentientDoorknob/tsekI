@@ -43,8 +43,8 @@ void tsekG_surface_register_resize(tsekSurface* surface) {
   }
 }
 
-void tsekG_clear(Color c) {
+void tsekG_clear(float r, float g, float b, float a) {
   glClear(GL_COLOR_BUFFER_BIT);
-  glClearColor(c.r, c.g, c.b, c.a);
+  glClearColor(r, g, b, a);
 }
 

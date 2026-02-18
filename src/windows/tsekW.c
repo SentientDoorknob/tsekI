@@ -3,9 +3,24 @@
 
 #include "tsekW.h"
 #include <stdio.h>
+#include <GL/wglext.h>
+#include <GL/wgl.h>
 
 tsekWContext* globalContext;
 int keycode_map[256];
+
+typedef HGLRC (WINAPI *wglCreateContextAttribsARB_t)(
+    HDC,
+    HGLRC,
+    const int*
+);
+
+typedef BOOL (WINAPI *wglChoosePixelFormatARB_t)(
+    HDC, int*, float*, UINT, int*, UINT*
+    );
+
+wglCreateContextAttribsARB_t Wcreate_gl_context;
+wglChoosePixelFormatARB_t Wchoose_pixel_format;
 
 void init_windows_keycode_map() {
   for (int i = 0; i <= 255; i++) {
@@ -316,6 +331,8 @@ void Wregister_windowclass(tsekIWindowInfo* info) {
 
   WNDCLASSEXW windowClassInfo = {};
 
+  printf("Preparing Windowclass with name: %s\n", info->wndClassName);
+
   windowClassInfo.cbSize = sizeof(WNDCLASSEXW);
   windowClassInfo.style = CS_HREDRAW | CS_VREDRAW;
   windowClassInfo.cbClsExtra = 0;
@@ -328,11 +345,130 @@ void Wregister_windowclass(tsekIWindowInfo* info) {
   windowClassInfo.hInstance = globalContext->hInstance;
   windowClassInfo.lpfnWndProc = Wproc_window;
 
+  printf("Registering Window Class");
+
   if (!RegisterClassExW(&windowClassInfo)) {
     fprintf(stderr, "Failed to register WNDCLASS\n");
   }
 
 }
+
+void Wload_gl() {
+  printf("About to open window... \n");
+
+  tsekIWindow* dummyWindow = malloc(sizeof(tsekIWindow));
+  tsekW_create_dummy_window(dummyWindow);
+  tsekWWindow* wwindow = Wget_window(dummyWindow);
+
+  printf("Dummy window opened\n");
+
+  PIXELFORMATDESCRIPTOR pfd = {
+    sizeof(PIXELFORMATDESCRIPTOR),
+    1,
+    PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,
+    PFD_TYPE_RGBA,
+    32,
+    0,0,0,0,0,0,
+    0,0,
+    0,0,0,0,
+    0,
+    24, 8, 0,
+    PFD_MAIN_PLANE, 0,
+    0,0,0
+  };
+
+  int pf = ChoosePixelFormat(wwindow->deviceContext, &pfd);
+  SetPixelFormat(wwindow->deviceContext, pf, &pfd);
+
+  HGLRC dummyContext = wglCreateContext(wwindow->deviceContext);
+  wglMakeCurrent(wwindow->deviceContext, dummyContext);
+
+  Wcreate_gl_context = (wglCreateContextAttribsARB_t)wglGetProcAddress("wglCreateContextAttribsARB");
+  Wchoose_pixel_format = (wglChoosePixelFormatARB_t)wglGetProcAddress("wglChoosePixelFormatARB");
+
+  if (!Wchoose_pixel_format || !Wcreate_gl_context) {
+    fprintf(stderr, "Failed to proc functions CreateContextAttribsARB_t or ChoosePixelFormatARB_T");
+  }
+
+  wglDeleteContext(dummyContext);
+  tsekW_destroy_window(dummyWindow);
+}
+
+void Wbuild_wgl_attribs(const tsekPixelFormat* pf, int* outAttribs) {
+    int i = 0;
+
+    #define ADD(a, b) outAttribs[i++] = (a); outAttribs[i++] = (b)
+
+    ADD(WGL_DRAW_TO_WINDOW_ARB, GL_TRUE);
+    ADD(WGL_SUPPORT_OPENGL_ARB, GL_TRUE);
+    ADD(WGL_DOUBLE_BUFFER_ARB,  GL_TRUE);
+    ADD(WGL_PIXEL_TYPE_ARB,     WGL_TYPE_RGBA_ARB);
+
+    ADD(WGL_RED_BITS_ARB,   pf->r_bits);
+    ADD(WGL_GREEN_BITS_ARB, pf->g_bits);
+    ADD(WGL_BLUE_BITS_ARB,  pf->b_bits);
+    ADD(WGL_ALPHA_BITS_ARB, pf->a_bits);
+
+    ADD(WGL_DEPTH_BITS_ARB,   pf->depth_bits);
+    ADD(WGL_STENCIL_BITS_ARB, pf->stencil_bits);
+
+    if (pf->samples > 0) {
+        ADD(WGL_SAMPLE_BUFFERS_ARB, 1);
+        ADD(WGL_SAMPLES_ARB,        pf->samples);
+    }
+
+    outAttribs[i++] = 0; // terminator
+
+    #undef ADD
+}
+
+void Wcreate_tsekG_context(tsekPixelFormat* format, tsekIWindow* window) {
+  tsekWWindow* wwindow = Wget_window(window);
+
+  int pixelFormatAttribs[32];
+  UINT numFormats = 0;
+  int chosenFormat = 0;
+
+  Wbuild_wgl_attribs(format, pixelFormatAttribs);
+
+  BOOL result = Wchoose_pixel_format(wwindow->deviceContext, pixelFormatAttribs, NULL, 1, &chosenFormat, &numFormats);
+
+  if (!result || numFormats == 0){
+    format->samples = 0;
+    BOOL result = Wchoose_pixel_format(wwindow->deviceContext, pixelFormatAttribs, NULL, 1, &chosenFormat, &numFormats);
+
+    if (!result || numFormats == 0) {
+      fprintf(stderr, "Failed to find pixel format\n");
+    }
+  }
+
+  PIXELFORMATDESCRIPTOR pfd;
+  DescribePixelFormat(wwindow->deviceContext, chosenFormat, sizeof(pfd), &pfd);
+  if (!SetPixelFormat(wwindow->deviceContext, chosenFormat, &pfd)) {
+    fprintf(stderr, "Failed to bind pixel format\n");
+  }
+
+  int attribs[] = {
+    WGL_CONTEXT_MAJOR_VERSION_ARB, 4,
+    WGL_CONTEXT_MINOR_VERSION_ARB, 6,
+    WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+    0,
+  };
+
+  wwindow->glContext = Wcreate_gl_context(wwindow->deviceContext, NULL, attribs);
+  if (!wwindow->glContext) {
+    fprintf(stderr, "Failed to create WGL context\n");
+  }
+
+  if (!wglMakeCurrent(wwindow->deviceContext, wwindow->glContext)) {
+    fprintf(stderr, "Failed to bind WGL context\n");
+  }
+
+  if (!gladLoadGL()) {
+    fprintf(stderr, "Failed to load GLAD\n");
+  }
+}
+
 
 void tsekW_init(tsekIContext* context, tsekIWindow* window, tsekIWindowInfo* info, wchar_t* defaultTitle, bool createGlobalContext, bool console) {
 
@@ -368,6 +504,12 @@ void tsekW_init(tsekIContext* context, tsekIWindow* window, tsekIWindowInfo* inf
     info = &defaultInfo;
   }
 
+  printf("About to load opengl...\n");
+
+  Wload_gl();
+
+  printf("Loaded Opengl\n");
+
   Wregister_windowclass(info);
 
   printf("Window Class Registered\n");
@@ -386,10 +528,39 @@ void tsekW_fill_context(tsekIContext* context, bool setGlobal) {
 }
 
 void tsekW_destroy_context(tsekIContext* context) {
+
 }
 
-
 void tsekW_create_dummy_window(tsekIWindow* window) {
+    HINSTANCE hInstance = globalContext->hInstance;
+    window->inner = calloc(1, sizeof(tsekWWindow));
+
+    Wregister_windowclass(&(tsekIWindowInfo){.wndClassName = L"DUMMY"});
+    printf("WNDCLASS registered\n");
+    tsekWWindow* wwindow = Wget_window(window);
+
+    printf("Running CreateWindowExW... \n");
+    wwindow->handle = CreateWindowExW(
+        0,
+        L"DUMMY",
+        L"DUMMY",
+        WS_OVERLAPPEDWINDOW,
+        100,
+        100,
+        100,
+        100,
+        NULL,
+        NULL,
+        hInstance,
+        window
+    );
+    wwindow->deviceContext = GetDC(wwindow->handle);
+
+    printf("Window Created with error code: %d\n", GetLastError());
+
+    if (wwindow->handle == NULL) {
+      printf("Failed to create Dummy Window\n");
+    }
 }
 
 void tsekW_create_window(tsekIWindow* window, tsekIWindowInfo* info) {
@@ -416,6 +587,8 @@ void tsekW_create_window(tsekIWindow* window, tsekIWindowInfo* info) {
     DWORD err = GetLastError();
     fprintf(stderr, "Failed to create window: %lu \n", err);
   }
+
+  Wcreate_tsekG_context(&info->pixelFormat, window);
 
   ShowWindow(wwindow->handle, SW_SHOW);
 
@@ -467,6 +640,7 @@ void tsekW_set_cursor_visible(tsekIWindow* window, bool visible) {
 
 
 void tsekW_swap_buffers(tsekIWindow* window) {
+  SwapBuffers(Wget_window(window)->deviceContext);
 }
 
 

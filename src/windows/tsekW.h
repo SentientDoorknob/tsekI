@@ -7,6 +7,7 @@
 
 typedef struct {
   HWND handle;
+  HGLRC glContext;
   HDC deviceContext;
   int minMaxDims[4];
 

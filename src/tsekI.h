@@ -2,10 +2,10 @@
 
 #define TSEKI_H 
 
+#include "../libs/glad.h"
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include "../libs/glad.h"
 
 #define MAX_KEYMAP_SIZE 256
 #define TARGET_FRAMERATE 60
@@ -211,7 +211,7 @@ typedef struct {
   uint32_t x, y, width, height;
 } POS;
 
-void tsekI_init(tsekIContext*, tsekIWindow*, tsekIWindowInfo*, wchar_t* defaultTitle, bool createGlobalContext, bool console);
+void tsekI_init(tsekIContext*, tsekIWindow*, tsekIWindowInfo*, wchar_t* defualtTitle, bool createGlobalContext, bool console);
 
 void tsekI_fill_context(tsekIContext* context, bool setGlobal);
 void tsekI_destroy_context(tsekIContext* context);
