@@ -531,6 +531,8 @@ void tsekW_fill_context(tsekIContext* context, bool setGlobal) {
   QueryPerformanceCounter(&wcontext->fixed_time);
   QueryPerformanceFrequency(&wcontext->freq);
 
+  wcontext->isCursorVisible = true;
+
   if (setGlobal) {
     globalContext = wcontext;
   }
@@ -600,8 +602,6 @@ void tsekW_create_window(tsekIWindow* window, tsekIWindowInfo* info) {
   Wcreate_tsekG_context(&info->pixelFormat, window);
 
   ShowWindow(wwindow->handle, SW_SHOW);
-
-  wwindow->isCursorVisible = true;
 }
 
 void tsekW_destroy_window(tsekIWindow* window) {
@@ -661,10 +661,12 @@ void tsekW_allocate_time(double framerate, double start, double end) {
 
 
 bool tsekW_get_cursor_visible(tsekIWindow* window) {
-  return true;
+  return globalContext->isCursorVisible;
 }
 
 void tsekW_set_cursor_visible(tsekIWindow* window, bool visible) {
+  ShowCursor(visible);
+  globalContext->isCursorVisible = visible;
 }
 
 

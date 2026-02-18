@@ -13,7 +13,6 @@ typedef struct {
 
   int keymap[255];
   tsekCallbacks callbacks;
-  bool isCursorVisible;
 } tsekWWindow;
 
 typedef struct {
@@ -22,6 +21,8 @@ typedef struct {
   LARGE_INTEGER time;
   LARGE_INTEGER fixed_time;
   LARGE_INTEGER freq;
+
+  bool isCursorVisible;
 } tsekWContext;
 
 void tsekW_init(tsekIContext*, tsekIWindow*, tsekIWindowInfo*, wchar_t* defaultTitle, bool createGlobalContext, bool console);
