@@ -523,6 +523,10 @@ void tsekW_fill_context(tsekIContext* context, bool setGlobal) {
   tsekWContext* wcontext = Wget_context(context);
   wcontext->hInstance = Wget_hInstance();
 
+  LARGE_INTEGER start;
+  QueryPerformanceCounter(&start);
+  printf("%d\n", start.QuadPart);
+
   QueryPerformanceCounter(&wcontext->time);
   QueryPerformanceCounter(&wcontext->fixed_time);
   QueryPerformanceFrequency(&wcontext->freq);
@@ -627,14 +631,32 @@ double tsekW_get_time() {
 }
 
 double tsekW_get_fixed_time() {
-  return 0;
+  LARGE_INTEGER end;
+  QueryPerformanceCounter(&end);
+
+  return (double)(end.QuadPart - globalContext->fixed_time.QuadPart) / globalContext->freq.QuadPart;
 }
 
-
 void tsekW_set_time(double time) {
+  LARGE_INTEGER curr;
+  QueryPerformanceCounter(&curr);
+
+  globalContext->time.QuadPart = (curr.QuadPart - time * globalContext->freq.QuadPart);
 }
 
 void tsekW_allocate_time(double framerate, double start, double end) {
+  timeBeginPeriod(1);
+
+  double frametime = 1000 / framerate;
+  double elapsed_time = 1000 * (end - start);
+  double ease = frametime / 16;
+  double sleep_time = frametime - elapsed_time - ease;
+
+  if (sleep_time > 0) {
+    Sleep(sleep_time);
+  }
+
+  timeEndPeriod(1);
 }
 
 

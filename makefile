@@ -4,7 +4,7 @@ CFLAGS = -I.
 DEBUG_FLAGS = -g -O0
 
 LDFLAGS_LINUX = -lX11 -lc -lGL
-LDFLAGS_WINDOWS = -lopengl32 -lgdi32
+LDFLAGS_WINDOWS = -lopengl32 -lgdi32 -lwinmm
 
 LDFLAGS = 
 

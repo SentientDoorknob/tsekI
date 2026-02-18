@@ -280,7 +280,6 @@ void tsekL_destroy_window(tsekIWindow* window) {
   glXMakeCurrent(globalContext->display, None, NULL);
   tsekL_set_cursor_visible(window, true);
   free(window->inner);
-  free(window);
 }
 
 void tsekL_create_dummy_window(tsekIWindow* window) {
