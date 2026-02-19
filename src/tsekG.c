@@ -21,7 +21,6 @@ void tsekG_surface_init(tsekSurfaceContent* surfaceContent , tsekSurfaceType typ
 void tsekG_surface_destroy(tsekSurface* surface) {
   switch (surface->type) {
     case TSEKI_WINDOW: {
-      tsekI_destroy_window(surface->content->tsekIWindow);
       break; 
     }
   }

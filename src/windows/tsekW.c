@@ -649,7 +649,8 @@ void tsekW_allocate_time(double framerate, double start, double end) {
 
   double frametime = 1000 / framerate;
   double elapsed_time = 1000 * (end - start);
-  double ease = frametime / 16;
+  //double ease = frametime / 16;
+  double ease = 0;
   double sleep_time = frametime - elapsed_time - ease;
 
   if (sleep_time > 0) {
