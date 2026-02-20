@@ -25,19 +25,17 @@ typedef struct {
 } tsekGBufferData;
 
 typedef struct {
-  int VBO;
-  int VAO;
-  int EBO;
+  uint32_t VBO;
+  uint32_t VAO;
+  uint32_t EBO;
   tsekGBufferData data;
 } tsekGBuffer;
 
 typedef enum {
   I32 = 0,
   U32,
-  I64,
-  U64,
   FLOAT,
-  BOOL,
+  FLAG,
   COL,
   POS3,
   POS2
@@ -58,6 +56,8 @@ typedef enum {
 typedef struct {
   const char* vertex;
   const char* fragment;
+  uint32_t vertexShader;
+  uint32_t fragmentShader;
   uint32_t shader;
 } tsekGShader;
 
