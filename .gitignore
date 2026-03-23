@@ -58,6 +58,7 @@ dkms.conf
 *.dwo
 
 main.c
+assets.h
 assets/
 tsekI
 

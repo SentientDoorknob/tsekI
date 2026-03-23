@@ -1,3 +1,6 @@
+#ifndef TSEKG 
+#define TSEKG 
+
 #include "tsekI.h"
 
 #define COL(r, g, b, a) ((Color){r, g, b, a})
@@ -18,48 +21,31 @@ typedef struct {
 } tsekSurface;
 
 typedef struct {
-  int* vertices;
-  int* indices;
-  int vertex_count;
-  int index_count;
-} tsekGBufferData;
+  GLenum type;
+  GLint count;
+  bool normalised;
+} tsekAttribute;
+
+#define TSEKG_MAX_ATTRIBUTE_SIZE 8
 
 typedef struct {
-  uint32_t VBO;
+  tsekAttribute attributes[TSEKG_MAX_ATTRIBUTE_SIZE];
+  uint32_t count;
+} tsekFormat;
+
+typedef struct {
   uint32_t VAO;
+  uint32_t VBO;
   uint32_t EBO;
-  tsekGBufferData data;
-} tsekGBuffer;
-
-typedef enum {
-  I32 = 0,
-  U32,
-  FLOAT,
-  FLAG,
-  COL,
-  POS3,
-  POS2
-} tsekGBufferDataType;
+  uint32_t index_count;
+  tsekFormat format;
+} tsekBuffer;
 
 typedef struct {
-  tsekGBufferDataType* format;
-  int count;
-} tsekGBufferFormat;
-
-typedef enum {
-  POINT = 0,
-  LINE,
-  TRIANGLE,
-  FAN,
-} tsekGPrimitive;
-
-typedef struct {
-  const char* vertex;
-  const char* fragment;
-  uint32_t vertexShader;
-  uint32_t fragmentShader;
-  uint32_t shader;
-} tsekGShader;
+  const char* vertex_src;
+  const char* fragment_src;
+  uint32_t program;
+} tsekShader;
 
 void tsekG_surface_init(tsekSurfaceContent*, tsekSurfaceType, tsekSurface*, bool);
 void tsekG_surface_destroy(tsekSurface* surface);
@@ -72,9 +58,10 @@ tsekSurface* tsekG_get_bound_surface();
 
 void tsekG_clear(float r, float g, float b, float a);
 
-void tsekG_describe_buffer(tsekGBuffer* buffer, tsekGBufferFormat format);
-void tsekG_fill_buffer(tsekGBuffer* buffer, tsekGBufferData data);
-void tsekG_render_buffer(tsekGBuffer* buffer, tsekGShader* shader, tsekGPrimitive primitive);
+void tsekG_describe_buffer(tsekBuffer* buffer, tsekFormat format);
+void tsekG_fill_buffer(tsekBuffer* buffer, void* vertices, uint32_t vertices_size, uint32_t* indices, uint32_t index_count);
+void tsekG_render_buffer(tsekBuffer* buffer, tsekShader* shader, GLenum primitive);
 
-void tsekG_compile_shader(tsekGShader* shader);
+void tsekG_compile_shader(tsekShader* shader);
 
+#endif

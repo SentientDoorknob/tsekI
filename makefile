@@ -20,6 +20,20 @@ LIBS_WINDOWS =
 CFLAGS_WINDOWS = -DPLATFORM_WINDOWS -UPLATFORM_LINUX
 CFLAGS_LINUX = -DPLATFORM_LINUX -UPLATFORM_WINDOWS
 
+# auto-detect OS if 'p' is not provided
+ifeq ($(p),)
+    UNAME_S := $(shell uname -s)
+    ifeq ($(UNAME_S),Linux)
+        p = linux
+    endif
+    ifeq ($(UNAME_S),Darwin)
+        p = mac
+    endif
+    ifeq ($(OS),Windows_NT)
+        p = windows
+    endif
+endif
+
 ifeq ($(p), windows)
 	CC = x86_64-w64-mingw32-gcc
 	CFLAGS += $(CFLAGS_WINDOWS)
