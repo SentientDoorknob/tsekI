@@ -24,6 +24,7 @@ typedef struct {
   GLenum type;
   GLint count;
   bool normalised;
+  GLint location;
 } tsekAttribute;
 
 #define TSEKG_MAX_ATTRIBUTE_SIZE 8

@@ -81,7 +81,7 @@ void tsekG_describe_buffer(tsekBuffer* buffer, tsekFormat format) {
 
     if (attribute.type == GL_INT || attribute.type == GL_UNSIGNED_INT) {
       glVertexAttribIPointer(
-          i,
+          attribute.location,
           attribute.count,
           attribute.type,
           stride,
@@ -89,7 +89,7 @@ void tsekG_describe_buffer(tsekBuffer* buffer, tsekFormat format) {
           );
     } else {
       glVertexAttribPointer(
-          i,
+          attribute.location,
           attribute.count,
           attribute.type,
           attribute.normalised,
