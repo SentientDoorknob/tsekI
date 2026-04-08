@@ -57,9 +57,6 @@ dkms.conf
 # debug information files
 *.dwo
 
-main.c
-assets.h
-assets/
 tsekI
 
 vgcore.*
