@@ -1,6 +1,7 @@
 #include "tsekI.h"
 #include "tsekG.h"
 #include <stdio.h>
+#include <string.h>
 
 tsekSurface* activeSurface;
 
@@ -79,7 +80,10 @@ void tsekG_describe_buffer(tsekBuffer* buffer, tsekFormat format) {
   for (int i = 0; i < format.count; i++) {
     tsekAttribute attribute = format.attributes[i];
 
+    printf("%d %d %d %d\n", attribute.type, attribute.count, attribute.normalised, attribute.location);
+
     if (attribute.type == GL_INT || attribute.type == GL_UNSIGNED_INT) {
+      printf("%d\n", GL_INT);
       glVertexAttribIPointer(
           attribute.location,
           attribute.count,
@@ -97,7 +101,7 @@ void tsekG_describe_buffer(tsekBuffer* buffer, tsekFormat format) {
           (void*)offset
           );
     }
-    glEnableVertexAttribArray(i);
+    glEnableVertexAttribArray(attribute.location);
 
     offset += attribute.count * Gget_size_glenum(attribute.type);
   }
@@ -162,4 +166,103 @@ void tsekG_compile_shader(tsekShader* shader) {
 
   glDeleteShader(vertex);
   glDeleteShader(fragment);
+}
+
+void tsekG_set_uniform_handle(tsekShader* shader, tsekUniform* handle, void* data) {
+
+  printf("Name %s | Location %d | Int: %d | Type: %d | Count: %d | Matrix?: %d\n", handle->name, handle->location, *(int*)data, handle->type, handle->count, handle->is_matrix);
+
+  glUseProgram(shader->program);
+
+  GLint loc = handle->location;
+  if (loc == -1) return;
+
+  if (handle->is_matrix) {
+    switch (handle->count) {
+      case 4: glUniformMatrix2fv(loc, 1, GL_FALSE, (float*)data); break;
+      case 9: glUniformMatrix3fv(loc, 1, GL_FALSE, (float*)data); break;
+      case 16: glUniformMatrix4fv(loc, 1, GL_FALSE, (float*)data); break;
+      default: fprintf(stderr, "Invalid Matrix Count: %d\n", handle->count);
+    }
+    return;
+  }
+
+  if (handle->type == GL_FLOAT) {
+    switch (handle->count) {
+      case 1: glUniform1fv(loc, 1, (float*)data); break;
+      case 2: glUniform2fv(loc, 1, (float*)data); break;
+      case 3: glUniform3fv(loc, 1, (float*)data); break;
+      case 4: glUniform4fv(loc, 1, (float*)data); break;
+      default: fprintf(stderr, "Invalid Float Vector Count: %d\n", handle->count);
+    }
+    return;
+  }
+
+  if (handle->type == GL_INT || handle->type == GL_UNSIGNED_INT) {
+    switch (handle->count) {
+      case 1: glUniform1iv(loc, 1, (int*)data); printf("Here!\n"); break;
+      case 2: glUniform2iv(loc, 1, (int*)data); break;
+      case 3: glUniform3iv(loc, 1, (int*)data); break;
+      case 4: glUniform4iv(loc, 1, (int*)data); break;
+      default: fprintf(stderr, "Invalid Integer Vector Count: %d\n", handle->count);
+    }
+    return;
+  }
+
+  glUseProgram(0);
+}
+
+tsekUniform* tsekG_set_uniform_name(tsekShader* shader, const char* name, void* data) {
+  for (int i = 0; i < shader->uniform_cache.count; i++) {
+    if (strcmp(name, shader->uniform_cache.uniforms[i].name) == 0) {
+
+      tsekUniform* handle = &shader->uniform_cache.uniforms[i];
+      tsekG_set_uniform_handle(shader, handle, data);
+      return handle;
+    }
+  }
+
+  fprintf(stderr, "No cached uniform with name '%s'\n", name);
+  return NULL;
+}
+
+
+tsekUniform* tsekG_set_uniform(tsekShader* shader, const char* name, GLenum type, GLint count, int is_matrix, void* data) {
+
+  // check cache for existing uniform 
+
+  for (int i = 0; i < shader->uniform_cache.count; i++) {
+    if (strcmp(name, shader->uniform_cache.uniforms[i].name) == 0) {
+
+      tsekUniform* handle = &shader->uniform_cache.uniforms[i];
+      handle->type = type;
+      handle->count = count;
+      handle->is_matrix = is_matrix;
+
+      tsekG_set_uniform_handle(shader, handle, data);
+      return handle;
+    }
+  }
+
+  // name is unrecognised; get location
+
+  GLint loc = glGetUniformLocation(shader->program, name);
+  if (loc == -1) {
+    fprintf(stderr, "Warning: Uniform '%s' not found\n", name);
+  }
+
+  // cache it 
+  if (shader->uniform_cache.count >= TSEKG_MAX_ATTRIBUTE_SIZE) {
+    fprintf(stderr, "Warning: Uniform cache capacity of %d filled. Not caching uniform '%s'", TSEKG_MAX_ATTRIBUTE_SIZE, name);
+  } else {
+    shader->uniform_cache.uniforms[shader->uniform_cache.count] = (tsekUniform){
+      .name = name, .location = loc, .type = type, .count = count, .is_matrix = is_matrix};
+    shader->uniform_cache.count++;
+  }
+
+  printf("%d\n", shader->uniform_cache.count);
+
+  tsekUniform* handle = &shader->uniform_cache.uniforms[shader->uniform_cache.count -1];
+  tsekG_set_uniform_handle(shader, handle, data);
+  return handle;
 }

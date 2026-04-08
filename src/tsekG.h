@@ -27,12 +27,25 @@ typedef struct {
   GLint location;
 } tsekAttribute;
 
-#define TSEKG_MAX_ATTRIBUTE_SIZE 8
+typedef struct {
+  char* name;
+  GLint location;
+  GLenum type;
+  GLint count;
+  int is_matrix;
+} tsekUniform;
+
+#define TSEKG_MAX_ATTRIBUTE_SIZE 32
 
 typedef struct {
   tsekAttribute attributes[TSEKG_MAX_ATTRIBUTE_SIZE];
   uint32_t count;
 } tsekFormat;
+
+typedef struct {
+  tsekUniform uniforms[TSEKG_MAX_ATTRIBUTE_SIZE];
+  uint32_t count;
+} tsekUniformCache;
 
 typedef struct {
   uint32_t VAO;
@@ -46,6 +59,9 @@ typedef struct {
   const char* vertex_src;
   const char* fragment_src;
   uint32_t program;
+
+  tsekUniformCache uniform_cache;
+
 } tsekShader;
 
 void tsekG_surface_init(tsekSurfaceContent*, tsekSurfaceType, tsekSurface*, bool);
@@ -64,5 +80,10 @@ void tsekG_fill_buffer(tsekBuffer* buffer, void* vertices, uint32_t vertices_siz
 void tsekG_render_buffer(tsekBuffer* buffer, tsekShader* shader, GLenum primitive);
 
 void tsekG_compile_shader(tsekShader* shader);
+
+
+tsekUniform* tsekG_set_uniform(tsekShader* shader, const char* name, GLenum type, GLint count, int is_matrix, void* data);
+tsekUniform* tsekG_set_uniform_name(tsekShader* shader, const char* name, void* data);
+void tsekG_set_uniform_handle(tsekShader* shader, tsekUniform* uniform, void* data);
 
 #endif
