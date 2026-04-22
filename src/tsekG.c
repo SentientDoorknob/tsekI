@@ -1,4 +1,4 @@
-#include "tsekI.h"
+include "tsekI.h"
 #include "tsekG.h"
 #include <stdio.h>
 #include <string.h>
@@ -265,4 +265,49 @@ tsekUniform* tsekG_set_uniform(tsekShader* shader, const char* name, GLenum type
   tsekUniform* handle = &shader->uniform_cache.uniforms[shader->uniform_cache.count -1];
   tsekG_set_uniform_handle(shader, handle, data);
   return handle;
+}
+
+u_char* Gparse_bitmap(const char* bitmap, uint32_t* out_size, uint32_t* width, uint32_t* height) {
+  uint32_t pixel_data_offset;
+  memcpy(&pixel_data_offset, bitmap + 0x0A, 4);
+
+  memcpy(width, bitmap + 0x12, 4);
+  memcpy(height, bitmap + 0x16, 4);
+
+  u_short pixel_size_bits;
+  memcpy(&pixel_size_bits, bitmap + 0x1C, 2);
+  uint32_t byte_count = pixel_size_bits / 8;
+
+  uint32_t row_size = ((*width * pixel_size_bits + 31) / 32) * 4;
+  uint32_t buffer_size = row_size * *height;
+
+  *out_size = (uint32_t)(*width * *height * byte_count);
+  u_char* out = (u_char*)malloc(*out_size);
+
+  for (int r = 0; r < *height; r++) {
+    for (int c = 0; c < *width; c++) {
+      u_char* pixel = out + (r * *width + c) * byte_count;
+      memcpy(pixel,
+          bitmap + pixel_data_offset + r * row_size + c * byte_count,
+          byte_count);
+
+      if (byte_count >= 3) {
+        u_char temp = pixel[0];
+        pixel[0] = pixel[2];
+        pixel[2] = temp;
+      }
+    }
+  }
+
+  return out;
+}
+
+void tsekG_create_texture(tsekTexture *texture, const char *bitmap, uint32_t unit, uint32_t channels, int wrapS, int wrapT, int filterMin, int filterMax, int mipmaps) {
+  
+}
+
+void tsekG_rebind_texture(tsekTexture* texture) {
+}
+
+void tsekG_bind_texture(tsekTexture* texture, uint32_t unit) {
 }

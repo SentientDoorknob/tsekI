@@ -3,7 +3,7 @@ CC = gcc
 CFLAGS = -I.
 DEBUG_FLAGS = -g -O0
 
-LDFLAGS_LINUX = -lX11 -lc -lGL
+LDFLAGS_LINUX = -lX11 -lc -lGL -lm
 LDFLAGS_WINDOWS = -lopengl32 -lgdi32 -lwinmm
 
 LDFLAGS = 

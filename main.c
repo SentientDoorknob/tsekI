@@ -1,5 +1,6 @@
 #include "src/tsekI.h"
 #include "src/tsekG.h"
+#include <math.h>
 #include <stdio.h>
 #include <time.h>
 
@@ -88,7 +89,6 @@ void Mainloop() {
   tsekG_render_buffer(&vertexBuffer, &pointShader, GL_TRIANGLES);
 
   float time = tsekI_get_time();
-  time = time - (long)time;
   tsekG_set_uniform_name(&pointShader, "time", &time);
 }
 
@@ -111,3 +111,9 @@ int main() {
   tsekG_surface_destroy(&surface);
   tsekI_destroy_context(&context);
 }
+
+/*
+TODO: Textures
+TODO: UBOs
+TODO: SSBOs
+ */

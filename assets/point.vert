@@ -8,6 +8,6 @@ uniform float time;
 layout(location = 0) out vec4 fCol;
 
 void main() {
-  gl_Position = vec4(pos.x, time * pos.y, 0, 1);
+  gl_Position = vec4(cos(time) * pos.x, sin(time) * pos.y, 0, 1);
   fCol = col;
 }

@@ -64,6 +64,14 @@ typedef struct {
 
 } tsekShader;
 
+typedef struct {
+  uint32_t unit;
+  uint32_t width, height, channels;
+  int wrapS, wrapT;
+  int filterMin, filterMax;
+  int mipmaps;
+} tsekTexture;
+
 void tsekG_surface_init(tsekSurfaceContent*, tsekSurfaceType, tsekSurface*, bool);
 void tsekG_surface_destroy(tsekSurface* surface);
 
@@ -85,5 +93,10 @@ void tsekG_compile_shader(tsekShader* shader);
 tsekUniform* tsekG_set_uniform(tsekShader* shader, const char* name, GLenum type, GLint count, int is_matrix, void* data);
 tsekUniform* tsekG_set_uniform_name(tsekShader* shader, const char* name, void* data);
 void tsekG_set_uniform_handle(tsekShader* shader, tsekUniform* uniform, void* data);
+
+
+void tsekG_create_texture(tsekTexture* texture, const char* bitmap, uint32_t unit, uint32_t channels, int wrapS, int wrapT, int filterMin, int filterMax, int mipmaps);
+void tsekG_rebind_texture(tsekTexture* texture);
+void teskG_bind_texture(tsekTexture* texture, uint32_t unit);
 
 #endif
