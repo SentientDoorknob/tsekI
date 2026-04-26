@@ -10,7 +10,7 @@ layout(location = 0) out vec4 fCol;
 layout(location = 1) out vec2 fTexCoords;
 
 void main() {
-  gl_Position = vec4(cos(time) * pos.x, sin(time) * pos.y, 0, 1);
+  gl_Position = vec4(pos.x, pos.y, 1, 1);
   fTexCoords = texCoords;
   fCol = col;
 }

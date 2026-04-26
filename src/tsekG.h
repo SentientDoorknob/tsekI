@@ -97,7 +97,7 @@ void tsekG_set_uniform_handle(tsekShader* shader, tsekUniform* uniform, void* da
 
 
 void tsekG_create_texture(tsekTexture* texture, const char* bitmap, uint32_t unit, int wrapS, int wrapT, int filterMin, int filterMax);
-void tsekG_bind_texture(tsekTexture* texture);
+void tsekG_bind_texture(tsekTexture* texture, tsekShader* shader, char* name);
 void tsekG_set_texture_unit(tsekTexture* texture, uint32_t unit);
 void tsekG_set_border_color(tsekTexture* texture, float* color);
 

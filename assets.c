@@ -19,3 +19,18 @@ const char bitmap[] = {
 #embed "assets/texture.bmp"
   , 0
 };
+
+const char wall[] = {
+#embed "assets/wall.bmp"
+  , 0
+};
+
+const char face[] = {
+#embed "assets/awesomeface.bmp"
+  , 0
+};
+
+const char container[] = {
+#embed "assets/container.bmp"
+  , 0
+};

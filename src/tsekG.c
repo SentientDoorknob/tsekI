@@ -200,7 +200,7 @@ void tsekG_set_uniform_handle(tsekShader* shader, tsekUniform* handle, void* dat
 
   if (handle->type == GL_INT || handle->type == GL_UNSIGNED_INT) {
     switch (handle->count) {
-      case 1: glUniform1iv(loc, 1, (int*)data); printf("Here!\n"); break;
+      case 1: glUniform1iv(loc, 1, (int*)data); break;
       case 2: glUniform2iv(loc, 1, (int*)data); break;
       case 3: glUniform3iv(loc, 1, (int*)data); break;
       case 4: glUniform4iv(loc, 1, (int*)data); break;
@@ -284,11 +284,10 @@ u_char* Gparse_bitmap(const char* bitmap, uint32_t* out_size, uint32_t* width, u
   u_char* out = (u_char*)malloc(*out_size);
 
   for (int r = 0; r < *height; r++) {
-    int src_row = (*height - 1 - r);
     for (int c = 0; c < *width; c++) {
       u_char* pixel = out + (r * *width + c) * byte_count;
       memcpy(pixel,
-          bitmap + pixel_data_offset + src_row * row_size + c * byte_count,
+          bitmap + pixel_data_offset + r * row_size + c * byte_count,
           byte_count);
 
       if (byte_count >= 3) {
@@ -338,15 +337,11 @@ void tsekG_set_texture_unit(tsekTexture* texture, uint32_t unit) {
   texture->unit = unit;
 }
 
-void tsekG_bind_texture(tsekTexture* texture) {
+void tsekG_bind_texture(tsekTexture* texture, tsekShader* shader, char* name) {
   glActiveTexture(GL_TEXTURE0 + texture->unit);
   glBindTexture(GL_TEXTURE_2D, texture->texture);
 
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, texture->wrapS);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, texture->wrapT);
-
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, texture->filterMin);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, texture->filterMax);
+  tsekG_set_uniform(shader, name, GL_INT, 1, 0, &texture->unit);
 }
 
 void tsekG_set_border_color(tsekTexture* texture, float* color) {
