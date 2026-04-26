@@ -14,3 +14,8 @@ tsekShader pointShader = {
   .vertex_src = point_vertex,
   .fragment_src = point_frag
 };
+
+const char bitmap[] = {
+#embed "assets/texture.bmp"
+  , 0
+};

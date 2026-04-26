@@ -44,6 +44,7 @@ void Setup(tsekIWindow* window, tsekIContext* context, tsekSurface* surface) {
 
 tsekBuffer vertexBuffer;
 tsekUniform* pointTimeHandle;
+tsekTexture texture;
 
 void FillBuffers() {
 
@@ -55,24 +56,28 @@ void FillBuffers() {
   struct Vertex {
     float pos[2];
     float col[4];
+    float tex[2];
   };
 
   struct Vertex vertices[] = {
-    {{0, 0}, {1, 0, 0, 1}},
-    {{0.5f, 0.5f}, {0, 1, 0, 1}},
-    {{0, 0.5f}, {0, 0, 1, 1}}
+    {{0, 0}, {1, 0, 1, 1}, {0, 0}},
+    {{0, 1}, {1, 0, 1, 1}, {0, 2}},
+    {{1, 0}, {1, 0, 1, 1}, {2, 0}},
+    {{1, 1}, {1, 0, 1, 1}, {2, 2}}
   };
 
   uint32_t indices[] = {
     0, 1, 2,
+    1, 2, 3
   };
 
   tsekFormat format = {
     .attributes = {
       {GL_FLOAT, 2, false, 0},
       {GL_FLOAT, 4, false, 1},
+      {GL_FLOAT, 2, false, 2}
     },
-    .count = 2
+    .count = 3
   };
 
   tsekG_describe_buffer(&vertexBuffer, format);
@@ -82,6 +87,14 @@ void FillBuffers() {
 
   float time = 0.1;
   tsekG_set_uniform(&pointShader, "time", GL_FLOAT, 1, 0, &time);
+
+  tsekG_create_texture(&texture, bitmap, 1, GL_CLAMP_TO_BORDER, GL_CLAMP_TO_BORDER, GL_NEAREST, GL_NEAREST);
+  tsekG_bind_texture(&texture);
+  tsekG_set_uniform(&pointShader, "mainTex", GL_INT, 1, 0, &texture.unit);
+
+  float border_color[] = {0.0f, 1.0f, 1.0f, 1.0f};
+  tsekG_set_border_color(&texture, border_color);
+
 }
 
 void Mainloop() {

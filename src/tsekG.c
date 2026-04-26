@@ -1,4 +1,4 @@
-include "tsekI.h"
+#include "tsekI.h"
 #include "tsekG.h"
 #include <stdio.h>
 #include <string.h>
@@ -170,7 +170,7 @@ void tsekG_compile_shader(tsekShader* shader) {
 
 void tsekG_set_uniform_handle(tsekShader* shader, tsekUniform* handle, void* data) {
 
-  printf("Name %s | Location %d | Int: %d | Type: %d | Count: %d | Matrix?: %d\n", handle->name, handle->location, *(int*)data, handle->type, handle->count, handle->is_matrix);
+  //printf("Name %s | Location %d | Int: %d | Type: %d | Count: %d | Matrix?: %d\n", handle->name, handle->location, *(int*)data, handle->type, handle->count, handle->is_matrix);
 
   glUseProgram(shader->program);
 
@@ -260,14 +260,12 @@ tsekUniform* tsekG_set_uniform(tsekShader* shader, const char* name, GLenum type
     shader->uniform_cache.count++;
   }
 
-  printf("%d\n", shader->uniform_cache.count);
-
   tsekUniform* handle = &shader->uniform_cache.uniforms[shader->uniform_cache.count -1];
   tsekG_set_uniform_handle(shader, handle, data);
   return handle;
 }
 
-u_char* Gparse_bitmap(const char* bitmap, uint32_t* out_size, uint32_t* width, uint32_t* height) {
+u_char* Gparse_bitmap(const char* bitmap, uint32_t* out_size, uint32_t* width, uint32_t* height, uint32_t* nr_channels) {
   uint32_t pixel_data_offset;
   memcpy(&pixel_data_offset, bitmap + 0x0A, 4);
 
@@ -277,6 +275,7 @@ u_char* Gparse_bitmap(const char* bitmap, uint32_t* out_size, uint32_t* width, u
   u_short pixel_size_bits;
   memcpy(&pixel_size_bits, bitmap + 0x1C, 2);
   uint32_t byte_count = pixel_size_bits / 8;
+  *nr_channels = byte_count;
 
   uint32_t row_size = ((*width * pixel_size_bits + 31) / 32) * 4;
   uint32_t buffer_size = row_size * *height;
@@ -285,10 +284,11 @@ u_char* Gparse_bitmap(const char* bitmap, uint32_t* out_size, uint32_t* width, u
   u_char* out = (u_char*)malloc(*out_size);
 
   for (int r = 0; r < *height; r++) {
+    int src_row = (*height - 1 - r);
     for (int c = 0; c < *width; c++) {
       u_char* pixel = out + (r * *width + c) * byte_count;
       memcpy(pixel,
-          bitmap + pixel_data_offset + r * row_size + c * byte_count,
+          bitmap + pixel_data_offset + src_row * row_size + c * byte_count,
           byte_count);
 
       if (byte_count >= 3) {
@@ -302,12 +302,54 @@ u_char* Gparse_bitmap(const char* bitmap, uint32_t* out_size, uint32_t* width, u
   return out;
 }
 
-void tsekG_create_texture(tsekTexture *texture, const char *bitmap, uint32_t unit, uint32_t channels, int wrapS, int wrapT, int filterMin, int filterMax, int mipmaps) {
-  
+void tsekG_create_texture(tsekTexture *texture, const char *bitmap, uint32_t unit, int wrapS, int wrapT, int filterMin, int filterMax) {
+  texture->unit = unit;
+  texture->wrapS = wrapS;
+  texture->wrapT = wrapT;
+  texture->filterMax = filterMax;
+  texture->filterMin = filterMin;
+
+  uint32_t width, height, out_size, nr_channels;
+  u_char* raw_texture = Gparse_bitmap(bitmap, &out_size, &width, &height, &nr_channels);
+
+  texture->width = width;
+  texture->height = height;
+  texture->channels = nr_channels;
+
+  glGenTextures(1, &texture->texture);
+
+  uint32_t format = nr_channels == 3 ? GL_RGB : GL_RGBA;
+  glBindTexture(GL_TEXTURE_2D, texture->texture);
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, texture->wrapS);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, texture->wrapT);
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, texture->filterMin);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, texture->filterMax);
+
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+  glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, raw_texture);
+  glGenerateMipmap(GL_TEXTURE_2D);
+
+  free(raw_texture);
 }
 
-void tsekG_rebind_texture(tsekTexture* texture) {
+void tsekG_set_texture_unit(tsekTexture* texture, uint32_t unit) {
+  texture->unit = unit;
 }
 
-void tsekG_bind_texture(tsekTexture* texture, uint32_t unit) {
+void tsekG_bind_texture(tsekTexture* texture) {
+  glActiveTexture(GL_TEXTURE0 + texture->unit);
+  glBindTexture(GL_TEXTURE_2D, texture->texture);
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, texture->wrapS);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, texture->wrapT);
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, texture->filterMin);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, texture->filterMax);
+}
+
+void tsekG_set_border_color(tsekTexture* texture, float* color) {
+  glBindTexture(GL_TEXTURE_2D, texture->texture);
+  glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, color);
 }
