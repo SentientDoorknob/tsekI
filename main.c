@@ -1,6 +1,6 @@
 #include "src/tsekI.h"
+#include "src/tsekM.h"
 #include "src/tsekG.h"
-#include <math.h>
 #include <stdio.h>
 #include <time.h>
 
@@ -112,6 +112,13 @@ int main() {
 
   Setup(&window, &context, &surface);
   FillBuffers();
+
+  float mat1[] = {2, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
+  float mat2[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
+  float out[16] = {};
+
+  tsekM_mul(out, mat1, mat2, 4);
+  tsekM_display_matrix(out, 4);
 
   while (tsekI_get_closed_window(&window)) {
     tsekI_update_window(&window);

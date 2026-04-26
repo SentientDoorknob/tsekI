@@ -485,7 +485,7 @@ void tsekW_init(tsekIContext* context, tsekIWindow* window, tsekIWindowInfo* inf
 
   tsekPixelFormat defaultPixelFormat = {
     .r_bits = 8, .g_bits = 8, .b_bits = 8, .a_bits = 8,
-    .depth_bits = 24, .stencil_bits = 2, .samples = 4 };
+    .depth_bits = 24, .stencil_bits = 8, .samples = 4 };
 
   tsekIWindowInfo defaultInfo = {
     .title = defaultTitle,

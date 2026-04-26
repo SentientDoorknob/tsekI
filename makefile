@@ -8,8 +8,8 @@ LDFLAGS_WINDOWS = -lopengl32 -lgdi32 -lwinmm
 
 LDFLAGS = 
 
-DEPS = src/tsekI.h src/tsekG.h src/linux/tsekL.h src/windows/tsekW.h libs/glad.h
-OBJS = main.o src/tsekI.o src/tsekG.o src/linux/tsekL.o src/windows/tsekW.o libs/glad.o
+DEPS = src/tsekI.h src/tsekG.h src/linux/tsekL.h src/windows/tsekW.h libs/glad.h src/tsekM.h
+OBJS = main.o src/tsekI.o src/tsekG.o src/linux/tsekL.o src/windows/tsekW.o libs/glad.o src/tsekM.o
 
 DEPS_LINUX = 
 DEPS_WINDOWS = 
