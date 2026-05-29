@@ -143,6 +143,114 @@ void tsekI_set_window_param(tsekIWindow *window, tsekIWindowParam param, void *i
 #endif
 }
 
+void tsekI_network_init() {
+#ifdef PLATFORM_LINUX
+  tsekL_network_init();
+#elif defined(PlATFORM_WINDOWS)
+  tsekW_network_init();
+#endif
+}
+
+void tsekI_network_cleanup() {
+#ifdef PLATFORM_LINUX
+  tsekL_network_cleanup();
+#elif defined(PlATFORM_WINDOWS)
+  tsekW_network_cleanup();
+#endif
+}
+
+void tsekI_get_address_info(char* url, int port, tsekIAddressInfo* info) {
+#ifdef PLATFORM_LINUX
+  tsekL_get_address_info(url, port, info);
+#elif defined(PlATFORM_WINDOWS)
+  tsekW_get_address_info(url, port, info);
+#endif
+}
+
+void tsekI_socket_create(tsekISocket* socket, int domain, int type, int protocol) {
+#ifdef PLATFORM_LINUX
+  tsekL_socket_create(socket, domain, type, protocol);
+#elif defined(PlATFORM_WINDOWS)
+  tsekW_socket_create(socket, domain, type, protocol);
+#endif
+}
+
+void tsekI_socket_close(tsekISocket* socket) {
+#ifdef PLATFORM_LINUX
+  tsekL_socket_close(socket);
+#elif defined(PlATFORM_WINDOWS)
+  tsekW_socket_close(socket);
+#endif
+}
+
+
+// server
+
+void tsekI_socket_bind(tsekISocket* socket, tsekIAddressInfo* address) {
+#ifdef PLATFORM_LINUX
+  tsekL_socket_bind(socket, address);
+#elif defined(PlATFORM_WINDOWS)
+  tsekW_socket_bind(socket, address);
+#endif
+}
+
+void tsekI_socket_listen(tsekISocket* socket, int backlog) {
+#ifdef PLATFORM_LINUX
+  tsekL_socket_listen(socket, backlog);
+#elif defined(PlATFORM_WINDOWS)
+  tsekW_socket_listen(socket, backlog);
+#endif
+}
+
+void tsekI_socket_accept(tsekISocket* server, tsekISocket* client, tsekIAddressInfo* address) {
+#ifdef PLATFORM_LINUX
+  tsekL_socket_accept(server, client, address);
+#elif defined(PlATFORM_WINDOWS)
+  tsekW_socket_accept(server, client, address);
+#endif
+}
+
+
+// client 
+
+void tsekI_socket_connect(tsekISocket* socket, tsekIAddressInfo* address) {
+#ifdef PLATFORM_LINUX
+  tsekL_socket_connect(socket, address);
+#elif defined(PlATFORM_WINDOWS)
+  tsekW_socket_connect(socket, address);
+#endif
+}
+
+
+// messaging
+
+int tsekI_socket_send(tsekISocket* socket, char* message, int length, bool OOB, bool dontroute) {
+#ifdef PLATFORM_LINUX
+  return tsekL_socket_connect(socket, message, length, OOB, dontroute);
+#elif defined(PlATFORM_WINDOWS)
+  return tsekW_socket_connect(socket, message, length, OOB, dontroute);
+#endif
+  return 0;
+}
+
+int tsekI_socket_recv(tsekISocket* socket, char* message, int length, bool OOB, bool peek, bool waitall) {
+#ifdef PLATFORM_LINUX
+  return tsekL_socket_recv(socket, message, length, OOB, peek, waitall);
+#elif defined(PlATFORM_WINDOWS)
+  return tsekW_socket_recv(socket, message, length, OOB, peek, waitall);
+#endif
+  return 0;
+}
+
+
+int tsekI_socket_geterror(tsekISocket* socket) {
+#ifdef PLATFORM_LINUX
+  return tsekL_socket_geterror(socket);
+#elif defined(PlATFORM_WINDOWS)
+  return tsekW_socket_geterror(socket);
+#endif
+  return 0;
+}
 
 
 #endif
