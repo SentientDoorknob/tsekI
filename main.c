@@ -1,4 +1,4 @@
-#include "src/tsekI.h"
+/* #include "src/tsekI.h"
 #include "src/tsekM.h"
 #include "src/tsekG.h"
 #include <stdio.h>
@@ -132,8 +132,10 @@ int main() {
   tsekI_destroy_context(&context);
 }
 
-/*
+/
 TODO: Textures
 TODO: UBOs
 TODO: SSBOs
- */
+ /
+
+*/

@@ -59,4 +59,42 @@ void tsekL_swap_buffers(tsekIWindow*);
 void tsekL_get_window_param(tsekIWindow* window, tsekIWindowParam param, void* out);
 void tsekL_set_window_param(tsekIWindow* window, tsekIWindowParam param, void* in);
 
+// networking
+
+typedef struct {
+  void* inner;
+} tsekLSocket;
+
+typedef struct {
+  void* inner;
+} tsekLConnection;
+
+typedef struct {
+  void* inner;
+} tsekLAddressInfo;
+
+void tsekL_network_init();
+void tsekL_network_cleanup();
+
+void tsekL_get_address_info(char* url, int port, tsekIAddressInfo* info);
+void tsekL_socket_create(tsekISocket* socket, int domain, int type, int protocol);
+void tsekL_socket_close(tsekISocket* socket);
+
+// server
+
+void tsekL_socket_bind(tsekISocket* socket, tsekIAddressInfo* address);
+void tsekL_socket_listen(tsekISocket* socket, int backlog);
+void tsekL_socket_accept(tsekISocket* server, tsekISocket* client, tsekIAddressInfo* address);
+
+// client 
+
+void tsekL_socket_connect(tsekISocket* socket, tsekIAddressInfo* address);
+
+// messaging
+
+int tsekL_socket_send(tsekISocket* socket, char* message, int length, bool OOB, bool dontroute);
+int tsekL_socket_recv(tsekISocket* socket, char* message, int length, bool OOB, bool peek, bool waitall);
+
+int tsekL_socket_geterror(tsekISocket* socket);
+
 #endif

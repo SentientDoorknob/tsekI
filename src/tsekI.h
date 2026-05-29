@@ -240,6 +240,42 @@ void tsekI_get_window_param(tsekIWindow* window, tsekIWindowParam param, void* o
 void tsekI_set_window_param(tsekIWindow* window, tsekIWindowParam param, void* in);
 
 
+// networking
 
+typedef struct {
+  void* inner;
+} tsekISocket;
+
+typedef struct {
+  void* inner;
+} tsekIConnection;
+
+typedef struct {
+  void* inner;
+} tsekIAddressInfo;
+
+void tsekI_network_init();
+void tsekI_network_cleanup();
+
+void tsekI_get_address_info(char* url, int port, tsekIAddressInfo* info);
+void tsekI_socket_create(tsekISocket* socket, int domain, int type, int protocol);
+void tsekI_socket_close(tsekISocket* socket);
+
+// server
+
+void tsekI_socket_bind(tsekISocket* socket, tsekIAddressInfo* address);
+void tsekI_socket_listen(tsekISocket* socket, int backlog);
+void tsekI_socket_accept(tsekISocket* server, tsekISocket* client, tsekIAddressInfo* address);
+
+// client 
+
+void tsekI_socket_connect(tsekISocket* socket, tsekIAddressInfo* address);
+
+// messaging
+
+int tsekI_socket_send(tsekISocket* socket, char* message, int length, bool OOB, bool dontroute);
+int tsekI_socket_recv(tsekISocket* socket, char* message, int length, bool OOB, bool peek, bool waitall);
+
+int tsekI_socket_geterror(tsekISocket* socket);
 
 #endif
