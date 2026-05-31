@@ -247,6 +247,8 @@ void client(int argc, char** argv) {
   tsekI_socket_create(&socket);
   tsekI_socket_connect(&socket, &server_address);
 
+  tsekI_display_addrinfo(&server_address);
+
   char* message = "What a mess! (age)";
   tsekI_socket_send(&socket, message, strlen(message), 0, 0);
 

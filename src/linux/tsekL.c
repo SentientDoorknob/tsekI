@@ -678,7 +678,7 @@ void tsekL_display_addrinfo(tsekIAddressInfo* info) {
   char ip[INET_ADDRSTRLEN];
   inet_ntop(addrinfo->info->ai_family, &(addrin->sin_addr), ip, INET_ADDRSTRLEN);
 
-  printf("\nSOCKET ADDRINFO\n-=-=-=-=-=-=-\nIP: %s\n\n", ip);
+  printf("\nSOCKET ADDRINFO\n-=-=-=-=-=-=-\nIP: %s\nPort: %d\n\n", ip, ntohs(addrin->sin_port));
 }
 
 void tsekL_destroy_address_info(tsekIAddressInfo* info) {
@@ -726,12 +726,15 @@ void tsekL_socket_accept(tsekISocket* server, tsekISocket* client, tsekIAddressI
 // client 
 
 void tsekL_socket_connect(tsekISocket* socket, tsekIAddressInfo* address) {
-  int success = connect(socket->handle, Lget_address_info(address)->info->ai_addr, Lget_address_info(address)->info->ai_addrlen);
+  for (struct addrinfo* pointer = Lget_address_info(address)->info; pointer != NULL; pointer = pointer->ai_next) {
+    int success = connect(socket->handle, pointer->ai_addr, pointer->ai_addrlen);
 
-  printf("Connected!\n");
-
-  if (success != 0) {
-    fprintf(stderr, "\nconnect failed with error code %d\n", success);
+    if (success != 0) {
+      tsekL_socket_close(socket);
+      tsekL_socket_create(socket);
+      continue;
+    }
+    return;
   }
 }
 
