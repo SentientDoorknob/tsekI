@@ -139,3 +139,138 @@ TODO: SSBOs
  /
 
 */
+
+
+#include "src/tsekI.h"
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+
+int client_http() {
+  char* host = "pubchem.ncbi.nlm.nih.gov";
+  int port = 443;
+
+  tsekIAddressInfo addrinfo;
+  tsekISocket socket;
+  tsekITLSSocket tls_socket;
+
+  tsekITLSContext context;
+  tsekI_TLS_init(&context);
+
+  tsekI_get_address_info(host, port, &addrinfo);
+  tsekI_socket_create(&socket);
+  tsekI_socket_connect(&socket, &addrinfo);
+
+  tsekI_TLS_bind(&tls_socket, host, &socket, &context);
+
+  char* req = "GET /rest/pug/compound/name/1-butene/property/MolecularFormula/TXT HTTP/1.1\r\n"
+    "Host: pubchem.ncbi.nlm.nih.gov\r\n"
+    "Connection: close\r\n"
+    "\r\n";
+
+  int w = tsekI_TLS_send(&tls_socket, req, strlen(req));
+
+  printf("Sent!\n");
+
+  while (true) {
+    char buffer[4096];
+
+    int bytes = tsekI_TLS_recv(&tls_socket, buffer, 4096);
+
+    if (bytes <= 0) {
+      break;
+    }
+
+    printf("%s\n", buffer);
+  }
+
+  tsekI_socket_close(&socket);
+  tsekI_destroy_address_info(&addrinfo);
+
+  tsekI_TLS_destroy_socket(&tls_socket, &socket);
+  tsekI_TLS_destroy_context(&context);
+
+  return 0;
+}
+
+
+void server() {
+  tsekIAddressInfo server_address;
+  tsekISocket server_socket;
+
+  tsekI_get_address_info(NULL, 25000, &server_address);
+  tsekI_socket_create(&server_socket);
+  
+  tsekI_socket_bind(&server_socket, &server_address);
+  tsekI_socket_listen(&server_socket, 1);
+
+  tsekIAddressInfo client_address;
+  tsekISocket client_socket;
+
+  tsekI_socket_accept(&server_socket, &client_socket, &client_address);
+  tsekI_socket_set_nonblocking(&client_socket, 1);
+
+  while (true) {
+    char buffer[4096];
+    int bytes = tsekI_socket_recv(&client_socket, buffer, 4096, 0, 0, 0);
+
+    if (bytes == 0) {
+      tsekI_socket_close(&client_socket);
+      break;
+    }
+
+    if (bytes == -1) {
+      continue;
+    }
+
+    printf("%s", buffer);
+
+    tsekI_socket_send(&client_socket, buffer, 4096, 0, 0);
+  }
+
+  tsekI_destroy_address_info(&server_address);
+  tsekI_destroy_address_info(&client_address);
+}
+
+
+void client(int argc, char** argv) {
+  tsekIAddressInfo server_address;
+  tsekISocket socket;
+
+  char* server = "127.0.0.1";
+
+  if (argc > 1) {
+    server = argv[1];
+  }
+
+  tsekI_get_address_info(server, 25000, &server_address);
+  tsekI_socket_create(&socket);
+  tsekI_socket_connect(&socket, &server_address);
+
+  char* message = "What a mess! (age)";
+  tsekI_socket_send(&socket, message, strlen(message), 0, 0);
+
+  while (true) {
+    char buffer[4096];
+    int bytes = tsekI_socket_recv(&socket, buffer, 4096, 0, 0, 0);
+
+    if (bytes == 0) {
+      break;
+    }
+
+    printf("%s", buffer);
+
+    char message[4096];
+    fgets(message, sizeof(message), stdin);
+    tsekI_socket_send(&socket, message, 4096, 0, 0);
+  }
+
+  tsekI_socket_close(&socket);
+  tsekI_destroy_address_info(&server_address);
+}
+
+
+
+int main(int argc, char** argv) {
+  client(argc, argv);
+}

@@ -3,6 +3,7 @@
 #include "../tsekI.h"
 #include "../tsekG.h"
 #include <math.h>
+#include <netdb.h>
 #include <unistd.h>
 #include <stdio.h>
 #include "tsekL.h"
@@ -15,6 +16,11 @@
 #include <time.h>
 #include <GL/glx.h>
 #include <GL/gl.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <openssl/ssl.h>
+#include <openssl/err.h>
+#include <fcntl.h>
 
 tsekLContext* globalContext;
 
@@ -639,5 +645,176 @@ void tsekL_get_window_param(tsekIWindow* window, tsekIWindowParam param, void* o
       }
     }
   }
+
+
+tsekLAddressInfo* Lget_address_info(tsekIAddressInfo* info) {
+  return (tsekLAddressInfo*)info->inner;
+}
+
+void tsekL_get_address_info(char* url, int port, tsekIAddressInfo* info) {
+  info->inner = malloc(sizeof(tsekLAddressInfo));
+  tsekLAddressInfo* addrinfo = Lget_address_info(info);
+
+  char port_string[6];
+  sprintf(port_string, "%05d", port);
+
+  struct addrinfo hints = {
+    .ai_family = AF_INET,
+    .ai_socktype = SOCK_STREAM,
+    .ai_protocol = IPPROTO_TCP,
+    .ai_flags = AI_V4MAPPED | AI_ADDRCONFIG | AI_NUMERICSERV | AI_PASSIVE
+  };
+
+  int success = getaddrinfo(url, port_string, &hints, &addrinfo->info);
+
+  if (success != 0) {
+    fprintf(stderr, "getaddrinfo failed with error code %d\n", success);
+  }
+}
+
+void tsekL_display_addrinfo(tsekIAddressInfo* info) {
+  tsekLAddressInfo* addrinfo = Lget_address_info(info);
+  struct sockaddr_in* addrin = (struct sockaddr_in*)addrinfo->info->ai_addr;
+  char ip[INET_ADDRSTRLEN];
+  inet_ntop(addrinfo->info->ai_family, &(addrin->sin_addr), ip, INET_ADDRSTRLEN);
+
+  printf("\nSOCKET ADDRINFO\n-=-=-=-=-=-=-\nIP: %s\n\n", ip);
+}
+
+void tsekL_destroy_address_info(tsekIAddressInfo* info) {
+  freeaddrinfo(Lget_address_info(info)->info);
+  free(info->inner);
+}
+
+void tsekL_network_init() {}
+void tsekL_network_cleanup() {}
+
+void tsekL_socket_create(tsekISocket* sock) {
+  sock->handle = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+}
+
+void tsekL_socket_close(tsekISocket* socket) {
+  close(socket->handle);
+}
+
+// server
+
+void tsekL_socket_bind(tsekISocket* socket, tsekIAddressInfo* address) {
+  tsekLAddressInfo* info = Lget_address_info(address);
+  int success = bind(socket->handle, info->info->ai_addr, info->info->ai_addrlen);
+
+  if (success != 0) {
+    fprintf(stderr, "bind failed with error code %d\n", success);
+  }
+}
+
+void tsekL_socket_listen(tsekISocket* socket, int backlog) {
+  int success = listen(socket->handle, backlog);
+  
+  if (success != 0) {
+    fprintf(stderr, "listen failed with error code %d\n", success);
+  }
+}
+
+void tsekL_socket_accept(tsekISocket* server, tsekISocket* client, tsekIAddressInfo* address) {
+  address->inner = malloc(sizeof(tsekLAddressInfo));
+  tsekLAddressInfo* info = Lget_address_info(address);
+  info->info = malloc(sizeof(struct addrinfo));
+  int addrlen = sizeof(struct sockaddr_storage);
+  client->handle = accept(server->handle, info->info->ai_addr, &addrlen);
+}
+// client 
+
+void tsekL_socket_connect(tsekISocket* socket, tsekIAddressInfo* address) {
+  int success = connect(socket->handle, Lget_address_info(address)->info->ai_addr, Lget_address_info(address)->info->ai_addrlen);
+
+  printf("Connected!\n");
+
+  if (success != 0) {
+    fprintf(stderr, "\nconnect failed with error code %d\n", success);
+  }
+}
+
+// messaging
+
+int tsekL_socket_send(tsekISocket* socket, char* message, int length, bool OOB, bool dontroute) {
+  int flags = 0;
+  if (OOB) flags |= MSG_OOB;
+  if (dontroute) flags |= MSG_DONTROUTE;
+  return send(socket->handle, message, length, flags);
+}
+
+int tsekL_socket_recv(tsekISocket* socket, char* message, int length, bool OOB, bool peek, bool waitall) {
+  int flags = 0;
+  if (OOB) flags |= MSG_OOB;
+  if (peek) flags |= MSG_PEEK;
+  if (waitall) flags |= MSG_WAITALL;
+  return recv(socket->handle, message, length, flags);
+}
+
+int tsekL_socket_geterror(tsekISocket* socket) {return 0;}
+
+void tsekL_socket_set_nonblocking(tsekISocket* socket, int mode) {
+  int flags = fcntl(socket->handle, F_GETFL, 0);
+  if (flags == -1) return;
+
+  if (mode) {
+    flags |= O_NONBLOCK;
+  } else {
+    flags &= ~O_NONBLOCK;
+  }
+
+  fcntl(socket->handle, F_SETFL, flags);
+}
+
+void tsekL_TLS_init(tsekITLSContext* context) {
+  SSL_library_init();
+  SSL_load_error_strings();
+  context->context = SSL_CTX_new(TLS_client_method());
+  SSL_CTX_set_verify(context->context, SSL_VERIFY_PEER, NULL);
+  SSL_CTX_set_default_verify_paths(context->context);
+}
+
+void tsekL_TLS_bind(tsekITLSSocket* tls_socket, char* host, tsekISocket* socket, tsekITLSContext* context) {
+  tls_socket->socket = SSL_new(context->context);
+  SSL_set_tlsext_host_name(tls_socket->socket, host);
+  SSL_set_fd(tls_socket->socket, socket->handle);
+
+  if (SSL_connect(tls_socket->socket) != 1) {
+    ERR_print_errors_fp(stderr);
+    return;
+  }
+  printf("TLS connected\n");
+}
+
+int tsekL_TLS_send(tsekITLSSocket* socket, char* message, int length) { 
+  int w = SSL_write(socket->socket, message, length);
+  if (w <= 0) {
+    ERR_print_errors_fp(stderr);
+  }
+  return w;
+}
+
+int tsekL_TLS_recv(tsekITLSSocket* socket, char* buffer, int length) {
+  int bytes;
+  bytes = SSL_read(socket->socket, buffer, length-1);
+
+  if (bytes <= 0) {
+    int err = SSL_get_error(socket->socket, bytes);
+    fprintf(stderr, "TLS_recv failed with error code %d\n", err);
+    return bytes;
+  }
+
+  buffer[bytes] = 0;
+  return bytes;
+}
+
+void tsekL_TLS_destroy_socket(tsekITLSSocket* tls_socket, tsekISocket* socket) {
+  SSL_free(tls_socket->socket);
+}
+
+void tsekL_TLS_destroy_context(tsekITLSContext* context) {
+  SSL_CTX_free(context->context);
+}
 
 #endif

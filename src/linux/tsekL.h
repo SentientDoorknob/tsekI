@@ -5,6 +5,8 @@
 #include <X11/Xutil.h>
 #include "../tsekI.h"
 #include <GL/glx.h>
+#include <sys/socket.h>
+#include <netdb.h>
 
 #define MAX_LINUX_KEYCODE 255
 
@@ -63,21 +65,19 @@ void tsekL_set_window_param(tsekIWindow* window, tsekIWindowParam param, void* i
 
 typedef struct {
   void* inner;
-} tsekLSocket;
-
-typedef struct {
-  void* inner;
 } tsekLConnection;
 
 typedef struct {
-  void* inner;
+  struct addrinfo* info;
 } tsekLAddressInfo;
 
 void tsekL_network_init();
 void tsekL_network_cleanup();
 
 void tsekL_get_address_info(char* url, int port, tsekIAddressInfo* info);
-void tsekL_socket_create(tsekISocket* socket, int domain, int type, int protocol);
+void tsekL_display_addrinfo(tsekIAddressInfo* info);
+void tsekL_destroy_address_info(tsekIAddressInfo* info);
+void tsekL_socket_create(tsekISocket* socket);
 void tsekL_socket_close(tsekISocket* socket);
 
 // server
@@ -96,5 +96,15 @@ int tsekL_socket_send(tsekISocket* socket, char* message, int length, bool OOB, 
 int tsekL_socket_recv(tsekISocket* socket, char* message, int length, bool OOB, bool peek, bool waitall);
 
 int tsekL_socket_geterror(tsekISocket* socket);
+void tsekL_socket_set_nonblocking(tsekISocket* socket, int mode);
+
+// TLS 
+
+void tsekL_TLS_init(tsekITLSContext* context);
+void tsekL_TLS_bind(tsekITLSSocket* tls_socket, char* host, tsekISocket* socket, tsekITLSContext* context);
+int tsekL_TLS_send(tsekITLSSocket* socket, char* message, int length);
+int tsekL_TLS_recv(tsekITLSSocket* socket, char* buffer, int length);
+void tsekL_TLS_destroy_socket(tsekITLSSocket* tls_socket, tsekISocket* socket);
+void tsekL_TLS_destroy_context(tsekITLSContext* context);
 
 #endif

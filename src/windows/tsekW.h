@@ -58,37 +58,46 @@ void tsekW_set_window_param(tsekIWindow* window, tsekIWindowParam param, void* i
 
 typedef struct {
   void* inner;
-} tsekMSocket;
+} tsekWConnection;
 
 typedef struct {
   void* inner;
-} tsekMConnection;
+} tsekWAddressInfo;
 
-typedef struct {
-  void* inner;
-} tsekMAddressInfo;
+void tsekW_network_init();
+void tsekW_network_cleanup();
 
-void tsekM_network_init();
-void tsekM_network_cleanup();
-
-void tsekM_get_address_info(char* url, int port, tsekIAddressInfo* info);
-void tsekM_socket_create(tsekISocket* socket, int domain, int type, int protocol);
-void tsekM_socket_close(tsekISocket* socket);
+void tsekW_get_address_info(char* url, int port, tsekIAddressInfo* info);
+void tsekW_display_addrinfo(tsekIAddressInfo* info);
+void tsekW_destroy_address_info(tsekIAddressInfo* info);
+void tsekW_socket_create(tsekISocket* socket);
+void tsekW_socket_close(tsekISocket* socket);
 
 // server
 
-void tsekM_socket_bind(tsekISocket* socket, tsekIAddressInfo* address);
-void tsekM_socket_listen(tsekISocket* socket, int backlog);
-void tsekM_socket_accept(tsekISocket* server, tsekISocket* client, tsekIAddressInfo* address);
+void tsekW_socket_bind(tsekISocket* socket, tsekIAddressInfo* address);
+void tsekW_socket_listen(tsekISocket* socket, int backlog);
+void tsekW_socket_accept(tsekISocket* server, tsekISocket* client, tsekIAddressInfo* address);
 
 // client 
 
-void tsekM_socket_connect(tsekISocket* socket, tsekIAddressInfo* address);
+void tsekW_socket_connect(tsekISocket* socket, tsekIAddressInfo* address);
 
 // messaging
 
-int tsekM_socket_send(tsekISocket* socket, char* message, int length, bool OOB, bool dontroute);
-int tsekM_socket_recv(tsekISocket* socket, char* message, int length, bool OOB, bool peek, bool waitall);
+int tsekW_socket_send(tsekISocket* socket, char* message, int length, bool OOB, bool dontroute);
+int tsekW_socket_recv(tsekISocket* socket, char* message, int length, bool OOB, bool peek, bool waitall);
 
-int tsekM_socket_geterror(tsekISocket* socket);
+int tsekW_socket_geterror(tsekISocket* socket);
+void tsekW_socket_set_nonblocking(tsekISocket* socket, int mode);
+
+// TLS 
+
+void tsekW_TLS_init(tsekITLSContext* context);
+void tsekW_TLS_bind(tsekITLSSocket* tls_socket, char* host, tsekISocket* socket, tsekITLSContext* context);
+int tsekW_TLS_send(tsekITLSSocket* socket, char* message, int length);
+int tsekW_TLS_recv(tsekITLSSocket* socket, char* buffer, int length);
+void tsekW_TLS_destroy_socket(tsekITLSSocket* tls_socket, tsekISocket* socket);
+void tsekW_TLS_destroy_context(tsekITLSContext* context);
+
 #endif

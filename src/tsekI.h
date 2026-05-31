@@ -243,7 +243,7 @@ void tsekI_set_window_param(tsekIWindow* window, tsekIWindowParam param, void* i
 // networking
 
 typedef struct {
-  void* inner;
+  int handle;
 } tsekISocket;
 
 typedef struct {
@@ -258,7 +258,9 @@ void tsekI_network_init();
 void tsekI_network_cleanup();
 
 void tsekI_get_address_info(char* url, int port, tsekIAddressInfo* info);
-void tsekI_socket_create(tsekISocket* socket, int domain, int type, int protocol);
+void tsekI_display_addrinfo(tsekIAddressInfo* info);
+void tsekI_destroy_address_info(tsekIAddressInfo* info);
+void tsekI_socket_create(tsekISocket* socket);
 void tsekI_socket_close(tsekISocket* socket);
 
 // server
@@ -277,5 +279,23 @@ int tsekI_socket_send(tsekISocket* socket, char* message, int length, bool OOB, 
 int tsekI_socket_recv(tsekISocket* socket, char* message, int length, bool OOB, bool peek, bool waitall);
 
 int tsekI_socket_geterror(tsekISocket* socket);
+void tsekI_socket_set_nonblocking(tsekISocket* socket, int mode);
+
+// TLS 
+
+typedef struct {
+  void* context;
+} tsekITLSContext;
+
+typedef struct {
+  void* socket;
+} tsekITLSSocket;
+
+void tsekI_TLS_init(tsekITLSContext* context);
+void tsekI_TLS_bind(tsekITLSSocket* tls_socket, char* host, tsekISocket* socket, tsekITLSContext* context);
+int tsekI_TLS_send(tsekITLSSocket* socket, char* message, int length);
+int tsekI_TLS_recv(tsekITLSSocket* socket, char* buffer, int length);
+void tsekI_TLS_destroy_socket(tsekITLSSocket* tls_socket, tsekISocket* socket);
+void tsekI_TLS_destroy_context(tsekITLSContext* context);
 
 #endif
