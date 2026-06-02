@@ -1,10 +1,10 @@
 CC = gcc
 
 CFLAGS = -I.
-DEBUG_FLAGS = -g -O0
+DEBUG_FLAGS = -g -O0 -save-temps
 
 LDFLAGS_LINUX = -lX11 -lc -lGL -lm -Lopenssl/openssl-0.9.8k/ -lssl -lcrypto -Iopenssl/openssl-0.9.8k/include
-LDFLAGS_WINDOWS = -lopengl32 -lgdi32 -lwinmm
+LDFLAGS_WINDOWS = -lopengl32 -lgdi32 -lwinmm -lws2_32
 
 LDFLAGS = 
 

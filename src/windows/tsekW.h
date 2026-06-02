@@ -2,6 +2,8 @@
 
 #include "../tsekI.h"
 #include <windows.h>
+#include <winsock2.h>
+#include <ws2tcpip.h>
 
 #define WINDOWS_MAX_KEYMAP_SIZE 255
 
@@ -61,7 +63,7 @@ typedef struct {
 } tsekWConnection;
 
 typedef struct {
-  void* inner;
+  struct addrinfo* info;
 } tsekWAddressInfo;
 
 void tsekW_network_init();

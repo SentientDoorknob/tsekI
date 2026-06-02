@@ -1,4 +1,5 @@
 
+#include <ws2tcpip.h>
 #ifdef PLATFORM_WINDOWS
 
 #include "tsekW.h"
@@ -876,4 +877,142 @@ void tsekW_set_window_param(tsekIWindow* window, tsekIWindowParam param, void* i
   }
 }
 
+
+
+tsekWAddressInfo* Wget_address_info(tsekIAddressInfo* info) {
+  return (tsekWAddressInfo*)info->inner;
+}
+
+void tsekW_network_init() {
+  WSADATA wsaData;
+  int iResult = WSAStartup(MAKEWORD(2,2), &wsaData);
+
+  if (iResult != 0) {
+    printf("WSAStartup failed with error code %d\n", iResult);
+  }
+}
+
+void tsekW_network_cleanup() {
+  WSACleanup();
+}
+
+void tsekW_get_address_info(char* url, int port, tsekIAddressInfo* info) {
+  info->inner = malloc(sizeof(tsekWAddressInfo));
+  tsekWAddressInfo* address = Wget_address_info(info);
+
+  char port_string[6];
+  sprintf(port_string, "%05d", port);
+
+  struct addrinfo hints = {
+    .ai_family = AF_INET,
+    .ai_socktype = SOCK_STREAM,
+    .ai_protocol = IPPROTO_TCP,
+    .ai_flags = AI_V4MAPPED | AI_ADDRCONFIG | AI_NUMERICSERV | AI_PASSIVE
+  };
+
+  int success = getaddrinfo(url, port_string, &hints, &address->info);
+
+  if (success != 0) {
+    fprintf(stderr, "getaddrinfo failed with error code %d\n", success);
+  }
+}
+
+void tsekW_display_addrinfo(tsekIAddressInfo* info) {
+  tsekWAddressInfo* address = Wget_address_info(info);
+  struct sockaddr_in* addrin = (struct sockaddr_in*)address->info->ai_addr;
+  char ip[INET_ADDRSTRLEN];
+  inet_ntop(address->info->ai_family, &(addrin->sin_addr), ip, INET_ADDRSTRLEN);
+
+  printf("\nSOCKET ADDRINFO\n-=-=-=-=-=-=-\nIP: %s\nPort: %d\n\n", ip, ntohs(addrin->sin_port));
+}
+
+void tsekW_destroy_address_info(tsekIAddressInfo* info) {
+  freeaddrinfo(Wget_address_info(info)->info);
+  free(info->inner);
+}
+
+void tsekW_socket_create(tsekISocket* sock) {
+  sock->handle = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+}
+
+void tsekW_socket_close(tsekISocket* socket) {
+  closesocket(socket->handle);
+}
+
+// server
+
+void tsekW_socket_bind(tsekISocket* socket, tsekIAddressInfo* address) {
+  tsekWAddressInfo* info = Wget_address_info(address);
+  int success = bind(socket->handle, info->info->ai_addr, info->info->ai_addrlen);
+
+  if (success != 0) {
+    fprintf(stderr, "bind failed with error code %d\n", success);
+  }
+}
+
+void tsekW_socket_listen(tsekISocket* socket, int backlog) {
+  int success = listen(socket->handle, backlog);
+
+  if (success != 0) {
+    fprintf(stderr, "listen failed with error code %d\n", success); 
+  }
+}
+
+void tsekW_socket_accept(tsekISocket* server, tsekISocket* client, tsekIAddressInfo* address) {
+  address->inner = malloc(sizeof(tsekWAddressInfo));
+  tsekWAddressInfo* info = Wget_address_info(address);
+  info->info = malloc(sizeof(struct addrinfo));
+  int addrlen = sizeof(struct sockaddr_storage);
+  client->handle = accept(server->handle, info->info->ai_addr, &addrlen);
+}
+
+// client 
+
+void tsekW_socket_connect(tsekISocket* socket, tsekIAddressInfo* address) {
+  for (struct addrinfo* pointer = Wget_address_info(address)->info; pointer != NULL; pointer = pointer->ai_next) {
+    int success = connect(socket->handle, pointer->ai_addr, pointer->ai_addrlen);
+
+    if (success != 0) {
+      tsekW_socket_create(socket);
+      tsekW_socket_close(socket);
+      continue;
+    }
+    return;
+  }
+}
+
+// messaging
+
+int tsekW_socket_send(tsekISocket* socket, char* message, int length, bool OOB, bool dontroute) {
+  int flags = 0;
+  if (OOB) flags |= MSG_OOB;
+  if (dontroute) flags |= MSG_DONTROUTE;
+  return send(socket->handle, message, length, flags);
+}
+
+int tsekW_socket_recv(tsekISocket* socket, char* message, int length, bool OOB, bool peek, bool waitall) {
+  int flags = 0;
+  if (OOB) flags |= MSG_OOB;
+  if (peek) flags |= MSG_PEEK;
+  if (waitall) flags |= MSG_DONTROUTE;
+  return recv(socket->handle, message, length, flags);
+}
+
+int tsekW_socket_geterror(tsekISocket* socket) { return 0; }
+
+void tsekW_socket_set_nonblocking(tsekISocket* socket, int mode) {
+  u_long ulm = mode;
+  if (ioctlsocket(socket->handle, FIONBIO, &ulm) != NO_ERROR) {
+    printf("ioctlsocket failed setting FIONBIO to mode %d\n", mode);
+  }
+}
+
+void tsekW_TLS_init(tsekITLSContext* context) {}
+void tsekW_TLS_bind(tsekITLSSocket* tls_socket, char* host, tsekISocket* socket, tsekITLSContext* context) {}
+int tsekW_TLS_send(tsekITLSSocket* socket, char* message, int length) {}
+int tsekW_TLS_recv(tsekITLSSocket* socket, char* buffer, int length) {}
+void tsekW_TLS_destroy_socket(tsekITLSSocket* tls_socket, tsekISocket* socket) {}
+void tsekW_TLS_destroy_context(tsekITLSContext* context) {}
+
 #endif
+

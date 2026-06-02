@@ -144,7 +144,6 @@ TODO: SSBOs
 #include "src/tsekI.h"
 #include <stdio.h>
 #include <string.h>
-#include <unistd.h>
 
 int client_http() {
   char* host = "pubchem.ncbi.nlm.nih.gov";
@@ -153,6 +152,8 @@ int client_http() {
   tsekIAddressInfo addrinfo;
   tsekISocket socket;
   tsekITLSSocket tls_socket;
+
+  tsekI_network_init();
 
   tsekITLSContext context;
   tsekI_TLS_init(&context);
@@ -190,6 +191,8 @@ int client_http() {
   tsekI_TLS_destroy_socket(&tls_socket, &socket);
   tsekI_TLS_destroy_context(&context);
 
+  tsekI_network_cleanup();
+
   return 0;
 }
 
@@ -197,6 +200,8 @@ int client_http() {
 void server() {
   tsekIAddressInfo server_address;
   tsekISocket server_socket;
+
+  tsekI_network_init();
 
   tsekI_get_address_info(NULL, 25000, &server_address);
   tsekI_socket_create(&server_socket);
@@ -230,6 +235,8 @@ void server() {
 
   tsekI_destroy_address_info(&server_address);
   tsekI_destroy_address_info(&client_address);
+
+  tsekI_network_cleanup();
 }
 
 
@@ -242,6 +249,8 @@ void client(int argc, char** argv) {
   if (argc > 1) {
     server = argv[1];
   }
+
+  tsekI_network_init();
 
   tsekI_get_address_info(server, 25000, &server_address);
   tsekI_socket_create(&socket);
@@ -269,6 +278,8 @@ void client(int argc, char** argv) {
 
   tsekI_socket_close(&socket);
   tsekI_destroy_address_info(&server_address);
+
+  tsekI_network_cleanup();
 }
 
 
