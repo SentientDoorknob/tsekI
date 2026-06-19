@@ -2,7 +2,6 @@
 
 #define TSEKI_H 
 
-#include "../libs/glad.h"
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -288,14 +287,16 @@ typedef struct {
 } tsekITLSContext;
 
 typedef struct {
-  void* socket;
+  void* inner;
 } tsekITLSSocket;
 
 void tsekI_TLS_init(tsekITLSContext* context);
-void tsekI_TLS_bind(tsekITLSSocket* tls_socket, char* host, tsekISocket* socket, tsekITLSContext* context);
+int tsekI_TLS_connect(tsekITLSSocket* tls_socket, char* host, tsekISocket* socket, tsekITLSContext* context);
 int tsekI_TLS_send(tsekITLSSocket* socket, char* message, int length);
 int tsekI_TLS_recv(tsekITLSSocket* socket, char* buffer, int length);
 void tsekI_TLS_destroy_socket(tsekITLSSocket* tls_socket, tsekISocket* socket);
 void tsekI_TLS_destroy_context(tsekITLSContext* context);
+
+// TODO: Add TLS server functions
 
 #endif

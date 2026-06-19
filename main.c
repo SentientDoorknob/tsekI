@@ -158,11 +158,19 @@ int client_http() {
   tsekITLSContext context;
   tsekI_TLS_init(&context);
 
+  printf("TLS Innited!\n");
+
   tsekI_get_address_info(host, port, &addrinfo);
   tsekI_socket_create(&socket);
   tsekI_socket_connect(&socket, &addrinfo);
 
-  tsekI_TLS_bind(&tls_socket, host, &socket, &context);
+  int s = tsekI_TLS_connect(&tls_socket, host, &socket, &context);
+  printf("%d\n", s);
+
+  if (s != 0) {
+    printf("TLS failed\n");
+    return -1;
+  }
 
   char* req = "GET /rest/pug/compound/name/1-butene/property/MolecularFormula/TXT HTTP/1.1\r\n"
     "Host: pubchem.ncbi.nlm.nih.gov\r\n"
@@ -285,5 +293,5 @@ void client(int argc, char** argv) {
 
 
 int main(int argc, char** argv) {
-  client(argc, argv);
+  client_http();
 }

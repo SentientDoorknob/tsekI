@@ -276,11 +276,11 @@ void tsekI_TLS_init(tsekITLSContext* context) {
 #endif
 }
 
-void tsekI_TLS_bind(tsekITLSSocket *tls_socket, char* host, tsekISocket *socket, tsekITLSContext *context) {
+int tsekI_TLS_connect(tsekITLSSocket *tls_socket, char* host, tsekISocket *socket, tsekITLSContext *context) {
 #ifdef PLATFORM_LINUX
-  tsekL_TLS_bind(tls_socket, host, socket, context);
+  return tsekL_TLS_connect(tls_socket, host, socket, context);
 #elif defined(PLATFORM_WINDOWS)
-  tsekW_TLS_bind(tls_socket, host, socket, context);
+  return tsekW_TLS_connect(tls_socket, host, socket, context);
 #endif
 }
 

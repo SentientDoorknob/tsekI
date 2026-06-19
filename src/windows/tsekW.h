@@ -1,9 +1,16 @@
 #ifdef PLATFORM_WINDOWS
+#define SECURITY_WIN32
 
 #include "../tsekI.h"
-#include <windows.h>
 #include <winsock2.h>
+#include <windows.h>
 #include <ws2tcpip.h>
+#include <security.h>
+#include <schannel.h>
+#include "../../libs/glad.h"
+
+#pragma comment(lib, "ws2_32.lib")
+#pragma comment(lib, "secur32.lib")
 
 #define WINDOWS_MAX_KEYMAP_SIZE 255
 
@@ -95,8 +102,21 @@ void tsekW_socket_set_nonblocking(tsekISocket* socket, int mode);
 
 // TLS 
 
+typedef struct {
+  tsekISocket* socket;
+  CredHandle credentials;
+  CtxtHandle context;
+  SecPkgContext_StreamSizes sizes;
+  int connected;
+  int handshake_complete;
+
+  int used, recieved, available;
+  char* decrypted_data;
+  char recv_data[32767];
+} tsekWTLSSocket;
+
 void tsekW_TLS_init(tsekITLSContext* context);
-void tsekW_TLS_bind(tsekITLSSocket* tls_socket, char* host, tsekISocket* socket, tsekITLSContext* context);
+int tsekW_TLS_connect(tsekITLSSocket* tls_socket, char* host, tsekISocket* socket, tsekITLSContext* context);
 int tsekW_TLS_send(tsekITLSSocket* socket, char* message, int length);
 int tsekW_TLS_recv(tsekITLSSocket* socket, char* buffer, int length);
 void tsekW_TLS_destroy_socket(tsekITLSSocket* tls_socket, tsekISocket* socket);

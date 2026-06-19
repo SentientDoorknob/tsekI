@@ -2,6 +2,7 @@
 #define TSEKG 
 
 #include "tsekI.h"
+#include "../libs/glad.h"
 
 #define COL(r, g, b, a) ((Color){r, g, b, a})
 #define POS2(x, y) ((Pos2){x, y})

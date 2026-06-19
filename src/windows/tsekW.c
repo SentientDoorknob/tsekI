@@ -1,11 +1,12 @@
 
-#include <ws2tcpip.h>
 #ifdef PLATFORM_WINDOWS
 
 #include "tsekW.h"
 #include <stdio.h>
 #include <GL/wglext.h>
 #include <GL/wgl.h>
+#include <schannel.h>
+#include <ws2tcpip.h>
 
 tsekWContext* globalContext;
 int keycode_map[256];
@@ -1007,11 +1008,185 @@ void tsekW_socket_set_nonblocking(tsekISocket* socket, int mode) {
   }
 }
 
-void tsekW_TLS_init(tsekITLSContext* context) {}
-void tsekW_TLS_bind(tsekITLSSocket* tls_socket, char* host, tsekISocket* socket, tsekITLSContext* context) {}
+tsekWTLSSocket* Wget_tls_socket(tsekITLSSocket* socket) {
+  return (tsekWTLSSocket*)socket->inner;
+}
+
+void tsekW_TLS_init(tsekITLSContext* context) {
+
+
+}
+
+int tsekW_TLS_connect(tsekITLSSocket* tls_socket, char* host, tsekISocket* socket, tsekITLSContext* context) {
+
+  printf("Connecting...\n");
+
+  tls_socket->inner = malloc(sizeof(tsekWTLSSocket));
+  tsekWTLSSocket* tlsock = Wget_tls_socket(tls_socket);
+  tlsock->socket = socket;
+
+  printf("TLS hostname: %s\n", host);
+
+  SCHANNEL_CRED credentials = {
+    .dwVersion = SCHANNEL_CRED_VERSION,
+    .dwFlags = SCH_USE_STRONG_CRYPTO | SCH_CRED_NO_DEFAULT_CREDS |
+      SCH_CRED_AUTO_CRED_VALIDATION,
+    .grbitEnabledProtocols = SP_PROT_TLS1_2,
+  };
+
+  int succ = AcquireCredentialsHandle(NULL, UNISP_NAME_A, SECPKG_CRED_OUTBOUND, NULL, &credentials, NULL, NULL, &tlsock->credentials, NULL);
+
+  if (succ != SEC_E_OK) {
+    printf("Failed Aquiring Credentials\n");
+    tsekW_socket_close(socket);
+    return -1;
+  }
+
+  printf("Credentials Aquired\n");
+
+  tlsock->used = tlsock->recieved = tlsock->available = 0;
+  tlsock->decrypted_data = NULL;
+
+  int success = 0;
+  CtxtHandle* handshake_context = 0;
+
+  printf("Starting Loop");
+
+  for (;;) {
+
+    printf("Describing Buffers\n");
+
+    SecBuffer incoming_buffers[2] = {};
+
+    incoming_buffers[0].BufferType = SECBUFFER_TOKEN;
+    incoming_buffers[0].cbBuffer = tlsock->recieved;
+    incoming_buffers[0].pvBuffer = tlsock->recv_data;
+
+    incoming_buffers[1].BufferType = SECBUFFER_EMPTY;
+
+    SecBuffer outgoing_buffers[1] = {};
+
+    outgoing_buffers[0].BufferType = SECBUFFER_TOKEN;
+
+    SecBufferDesc incoming_descriptor = {
+      SECBUFFER_VERSION,
+      ARRAYSIZE(incoming_buffers),
+      incoming_buffers
+    };
+    SecBufferDesc outgoing_descriptor = {
+      SECBUFFER_VERSION,
+      ARRAYSIZE(outgoing_buffers),
+      outgoing_buffers
+    };
+
+    DWORD flags = ISC_REQ_USE_SUPPLIED_CREDS | ISC_REQ_ALLOCATE_MEMORY | ISC_REQ_CONFIDENTIALITY | ISC_REQ_REPLAY_DETECT | ISC_REQ_SEQUENCE_DETECT | ISC_REQ_STREAM;
+
+    printf("Attempting Handshake\n");
+
+    SECURITY_STATUS status;
+    status = InitializeSecurityContextA(
+        &tlsock->credentials,
+        handshake_context,
+        handshake_context ? NULL : (SEC_CHAR*)host,
+        flags,
+        0,
+        0,
+        handshake_context ? &incoming_descriptor : NULL,
+        0,
+        handshake_context ? NULL: &tlsock->context,
+        &outgoing_descriptor,
+        &flags,
+        NULL);
+
+    printf("Security Context Status %x\n", status);
+
+    handshake_context = &tlsock->context;
+
+    // Extra data sent 
+    
+    if (incoming_buffers[1].BufferType == SECBUFFER_EXTRA) {
+      MoveMemory(tlsock->recv_data, tlsock->recv_data + (tlsock->recieved - incoming_buffers[1].cbBuffer), incoming_buffers[1].cbBuffer);
+    }
+    else {
+      tlsock->recieved = 0;
+    }
+
+    // Case 1: Handshake Successful!
+    if (status == SEC_E_OK) {
+      printf("Handshake Successful!!\n");
+      break;
+    }
+    // Case 2: Server requires client certificate (uncommon)
+    else if (status == SEC_I_INCOMPLETE_CREDENTIALS) {
+      success = -1;
+      break;
+    }
+    // Case 3: Server requires more DAYTA
+    else if (status == SEC_I_CONTINUE_NEEDED) {
+      char* out_buffer = outgoing_buffers[0].pvBuffer;
+      int buffer_size = outgoing_buffers[0].cbBuffer;
+
+      while (buffer_size != 0) {
+        int sent = tsekW_socket_send(socket, out_buffer, buffer_size, 0, 0);
+
+        if (sent <= 0) {
+          break;
+        }
+
+        buffer_size -= sent;
+        out_buffer += sent;
+      }
+
+      FreeContextBuffer(outgoing_buffers[0].pvBuffer);
+      if (buffer_size != 0) {
+        success = -1;
+        break;
+      }
+    }
+    // Case 4: The Rest 
+    else if (status != SEC_E_INCOMPLETE_MESSAGE) {
+      success = -1;
+      break;
+    }
+
+    // There should be no data to read
+    if (tlsock->recieved == sizeof(tlsock->recv_data)) {
+      success = -2;
+      break;
+    }
+
+    // Now we properly recv data
+    int bytes = tsekW_socket_recv(socket, tlsock->recv_data + tlsock->recieved, sizeof(tlsock->recv_data) - tlsock->recieved, 0, 0, 0);
+
+    // Did server disconnect?
+    if (bytes == 0) {
+      return 0;
+    }
+    else if (bytes < 0) {
+      success = -1;
+      break;
+    }
+    tlsock->recieved += bytes;
+  }
+
+  if (success != 0) {
+    DeleteSecurityContext(handshake_context);
+    FreeCredentialsHandle(&tlsock->credentials);
+    tsekW_socket_close(socket);
+    tsekW_network_cleanup();
+    return success;
+  }
+
+  QueryContextAttributes(handshake_context, SECPKG_ATTR_STREAM_SIZES, &tlsock->sizes);
+  return 0;
+}
+
 int tsekW_TLS_send(tsekITLSSocket* socket, char* message, int length) {}
+
 int tsekW_TLS_recv(tsekITLSSocket* socket, char* buffer, int length) {}
+
 void tsekW_TLS_destroy_socket(tsekITLSSocket* tls_socket, tsekISocket* socket) {}
+
 void tsekW_TLS_destroy_context(tsekITLSContext* context) {}
 
 #endif

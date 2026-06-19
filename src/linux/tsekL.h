@@ -7,6 +7,7 @@
 #include <GL/glx.h>
 #include <sys/socket.h>
 #include <netdb.h>
+#include "../../libs/glad.h"
 
 #define MAX_LINUX_KEYCODE 255
 
@@ -101,7 +102,7 @@ void tsekL_socket_set_nonblocking(tsekISocket* socket, int mode);
 // TLS 
 
 void tsekL_TLS_init(tsekITLSContext* context);
-void tsekL_TLS_bind(tsekITLSSocket* tls_socket, char* host, tsekISocket* socket, tsekITLSContext* context);
+int tsekL_TLS_connect(tsekITLSSocket* tls_socket, char* host, tsekISocket* socket, tsekITLSContext* context);
 int tsekL_TLS_send(tsekITLSSocket* socket, char* message, int length);
 int tsekL_TLS_recv(tsekITLSSocket* socket, char* buffer, int length);
 void tsekL_TLS_destroy_socket(tsekITLSSocket* tls_socket, tsekISocket* socket);

@@ -778,9 +778,8 @@ void tsekL_TLS_init(tsekITLSContext* context) {
   SSL_CTX_set_default_verify_paths(context->context);
 }
 
-void tsekL_TLS_bind(tsekITLSSocket* tls_socket, char* host, tsekISocket* socket, tsekITLSContext* context) {
+int tsekL_TLS_connect(tsekITLSSocket* tls_socket, char* host, tsekISocket* socket, tsekITLSContext* context) {
   tls_socket->socket = SSL_new(context->context);
-  SSL_set_tlsext_host_name(tls_socket->socket, host);
   SSL_set_fd(tls_socket->socket, socket->handle);
 
   if (SSL_connect(tls_socket->socket) != 1) {
@@ -788,6 +787,7 @@ void tsekL_TLS_bind(tsekITLSSocket* tls_socket, char* host, tsekISocket* socket,
     return;
   }
   printf("TLS connected\n");
+  return 0;
 }
 
 int tsekL_TLS_send(tsekITLSSocket* socket, char* message, int length) { 
@@ -821,3 +821,4 @@ void tsekL_TLS_destroy_context(tsekITLSContext* context) {
 }
 
 #endif
+
