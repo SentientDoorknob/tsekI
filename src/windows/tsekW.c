@@ -1181,7 +1181,67 @@ int tsekW_TLS_connect(tsekITLSSocket* tls_socket, char* host, tsekISocket* socke
   return 0;
 }
 
-int tsekW_TLS_send(tsekITLSSocket* socket, char* message, int length) {}
+int tsekW_TLS_send(tsekITLSSocket* socket, char* message, int length) {
+  tsekWTLSSocket* tlsock = Wget_tls_socket(socket);
+
+  while (length != 0) {
+    int bytes_to_send = min(tlsock->sizes.cbMaximumMessage, length);
+
+    int max_size = tlsock->sizes.cbHeader + tlsock->sizes.cbMaximumMessage + tlsock->sizes.cbTrailer;
+    char send_buffer[max_size + 1];
+
+    SecBuffer send_buffer_sections[3];
+
+    send_buffer_sections[0].BufferType = SECBUFFER_STREAM_HEADER;
+    send_buffer_sections[0].pvBuffer = send_buffer;
+    send_buffer_sections[0].cbBuffer = tlsock->sizes.cbHeader;
+
+    send_buffer_sections[1].BufferType = SECBUFFER_DATA;
+    send_buffer_sections[1].pvBuffer = send_buffer + tlsock->sizes.cbHeader;
+    send_buffer_sections[1].cbBuffer = bytes_to_send;
+
+    send_buffer_sections[2].BufferType = SECBUFFER_STREAM_TRAILER;
+    send_buffer_sections[2].pvBuffer = send_buffer + tlsock->sizes.cbHeader + bytes_to_send;
+    send_buffer_sections[2].cbBuffer = tlsock->sizes.cbTrailer;
+
+    CopyMemory(send_buffer_sections[1].pvBuffer, message, bytes_to_send);
+
+    SecBufferDesc send_buffer_descriptor = {
+      SECBUFFER_VERSION,
+      ARRAYSIZE(send_buffer_sections),
+      send_buffer_sections,
+    };
+
+    SECURITY_STATUS status = EncryptMessage(&tlsock->context, 0, &send_buffer_descriptor, 0);
+
+    // Check for errors
+    if (status != SEC_E_OK) {
+      printf("Encryption failed with error code %d\n", status);
+      return -1;
+    }
+
+    printf("Encryption Successful!\n");
+
+    int total_used_bytes = send_buffer_sections[0].cbBuffer + send_buffer_sections[1].cbBuffer + send_buffer_sections[2].cbBuffer;
+    int total_sent_bytes = 0;
+
+    while (total_sent_bytes != total_used_bytes) {
+      int sent_bytes = send(tlsock->socket->handle, send_buffer + total_sent_bytes, total_used_bytes - total_sent_bytes, 0);
+
+      if (sent_bytes <= 0) {
+        // error
+        return -1;
+      }
+
+      total_sent_bytes += sent_bytes;
+    }
+
+    message = message + bytes_to_send;
+    length -= bytes_to_send;
+  }
+  
+  return 0;
+}
 
 int tsekW_TLS_recv(tsekITLSSocket* socket, char* buffer, int length) {}
 
