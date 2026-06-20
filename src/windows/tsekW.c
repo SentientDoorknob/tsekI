@@ -1243,9 +1243,167 @@ int tsekW_TLS_send(tsekITLSSocket* socket, char* message, int length) {
   return 0;
 }
 
-int tsekW_TLS_recv(tsekITLSSocket* socket, char* buffer, int length) {}
+int tsekW_TLS_recv(tsekITLSSocket* socket, char* buffer, int length) {
+  // 0 -> disconnect  + -> bytes sent  - -> error code 
+  int result = 0;
+  tsekWTLSSocket* tlsock = Wget_tls_socket(socket);
+  printf("Recving\n");
 
-void tsekW_TLS_destroy_socket(tsekITLSSocket* tls_socket, tsekISocket* socket) {}
+  while (length > 0) {
+
+    // Push available decrypted data 
+    if (tlsock->decrypted_data) {
+
+      int bytes_to_read = min(length, tlsock->available);
+      CopyMemory(buffer, tlsock->decrypted_data, bytes_to_read);
+
+      buffer += bytes_to_read;
+      length -= bytes_to_read;
+      result += bytes_to_read;
+      printf("Pushing Decrypted Data\n");
+
+      // All decrypted data read (:
+      if (bytes_to_read == tlsock->available) {
+        MoveMemory(tlsock->recv_data, tlsock->recv_data + tlsock->used, tlsock->recieved - tlsock->used);
+
+        tlsock->recieved -= tlsock->used;
+        tlsock->used = 0;
+        tlsock->available = 0;
+        tlsock->decrypted_data = NULL;
+      }
+      // Not enough space in the buffer 
+      else {
+        tlsock->available -= bytes_to_read;
+        tlsock->decrypted_data += bytes_to_read;
+      }
+    }
+    // All decrypted data read last iteration
+    else {
+      // Try and decrypt ciphertext data 
+      if (tlsock->recieved != 0) {
+        SecBuffer incoming_buffers[4];
+
+        incoming_buffers[0].BufferType = SECBUFFER_DATA;
+        incoming_buffers[0].pvBuffer = tlsock->recv_data;
+        incoming_buffers[0].cbBuffer = tlsock->recieved;
+
+        incoming_buffers[1].BufferType = SECBUFFER_EMPTY;
+        incoming_buffers[2].BufferType = SECBUFFER_EMPTY;
+        incoming_buffers[3].BufferType = SECBUFFER_EMPTY;
+
+        SecBufferDesc incoming_buffers_descriptor = {
+            SECBUFFER_VERSION,
+            ARRAYSIZE(incoming_buffers),
+            incoming_buffers,
+        };
+
+        SECURITY_STATUS status = DecryptMessage(&tlsock->context, &incoming_buffers_descriptor, 0, NULL);
+
+        // Case 0: Yay!
+        if (status == SEC_E_OK) {
+          tlsock->decrypted_data = incoming_buffers[1].pvBuffer;
+          tlsock->available = incoming_buffers[1].cbBuffer;
+          tlsock->used = tlsock->recieved - (incoming_buffers[3].BufferType == SECBUFFER_EXTRA ? incoming_buffers[3].cbBuffer : 0);
+
+          continue;
+        }
+        // Case 1: Content expired
+        else if (status == SEC_I_CONTEXT_EXPIRED) {
+          tlsock->recieved = 0;
+          printf("Content Expired\n");
+          return result;
+        }
+        // Case 2: Renegotiation required
+        else if (status == SEC_I_RENEGOTIATE) {
+          return -1;
+        }
+        // Case 3: Other kind of error
+        else if (status != SEC_E_INCOMPLETE_MESSAGE) {
+          return -1;
+        }
+        else {
+          // SEC_E_INCOMPLETE_MESSAGE -> need to read more data 
+        }
+      }
+      // no data recieved 
+
+      if (result != 0) {
+        break;
+      }
+
+      if (tlsock->recieved == sizeof(tlsock->recv_data)) {
+        return -1;
+      }
+
+      // recv data 
+      int bytes_recved = tsekW_socket_recv(tlsock->socket, tlsock->recv_data + tlsock->recieved, sizeof(tlsock->recv_data) - tlsock->recieved, 0, 0, 0);
+
+      // server disconnect
+      if (bytes_recved == 0) {
+        printf("Recv 0 bytes\n");
+        return result;
+      }
+      // error 
+      else if (bytes_recved < 0) {
+        return result ? result : -1;
+      }
+
+      tlsock->recieved += bytes_recved;
+    }
+  }
+  return result;
+}
+
+void tsekW_TLS_destroy_socket(tsekITLSSocket* tls_socket, tsekISocket* socket) {
+  tsekWTLSSocket* tlsock = Wget_tls_socket(tls_socket);
+  DWORD type = SCHANNEL_SHUTDOWN;
+
+  SecBuffer incoming_buffers[1];
+  incoming_buffers[0].BufferType = SECBUFFER_TOKEN;
+  incoming_buffers[0].pvBuffer = &type;
+  incoming_buffers[0].cbBuffer = sizeof(type);
+
+  SecBufferDesc incoming_buffers_descriptor = {
+    SECBUFFER_VERSION,
+    ARRAYSIZE(incoming_buffers),
+    incoming_buffers,
+  };
+  ApplyControlToken(&tlsock->context, &incoming_buffers_descriptor);
+
+  SecBuffer outgoing_buffers[1];
+  outgoing_buffers[0].BufferType = SECBUFFER_TOKEN;
+
+  SecBufferDesc outgoing_buffers_descriptor = {
+    SECBUFFER_VERSION,
+    ARRAYSIZE(outgoing_buffers),
+    outgoing_buffers,
+  };
+
+  DWORD flags = ISC_REQ_ALLOCATE_MEMORY | ISC_REQ_CONFIDENTIALITY | ISC_REQ_SEQUENCE_DETECT | ISC_REQ_REPLAY_DETECT | ISC_REQ_STREAM;
+
+  if (InitializeSecurityContextA(&tlsock->credentials, &tlsock->context, NULL, flags, 0, 0, &outgoing_buffers_descriptor, 0, NULL, &outgoing_buffers_descriptor, &flags, NULL) == SEC_E_OK) {
+
+    char* message = outgoing_buffers[0].pvBuffer;
+    int length = outgoing_buffers[0].cbBuffer;
+
+    while (length != 0) {
+      int bytes_sent = tsekW_socket_send(tlsock->socket, message, length, 0, 0);
+
+      if (bytes_sent <= 0) {
+        break;
+      }
+
+      message += bytes_sent;
+      length -= bytes_sent;
+    }
+    FreeContextBuffer(outgoing_buffers[0].pvBuffer);
+  }
+  tsekW_socket_close(tlsock->socket);
+
+  FreeCredentialsHandle(&tlsock->credentials);
+  DeleteSecurityContext(&tlsock->context);
+  WSACleanup();
+}
 
 void tsekW_TLS_destroy_context(tsekITLSContext* context) {}
 

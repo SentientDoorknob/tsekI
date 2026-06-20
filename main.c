@@ -187,6 +187,7 @@ int client_http() {
     int bytes = tsekI_TLS_recv(&tls_socket, buffer, 4096);
 
     if (bytes <= 0) {
+      printf("Server Disconnected\n");
       break;
     }
 
